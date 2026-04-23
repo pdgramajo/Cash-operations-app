@@ -12,7 +12,11 @@ import {
   downloadReport,
 } from '@/lib/services/reportService';
 
-export function ReportsPage() {
+interface ReportsPageProps {
+  onBack: () => void;
+}
+
+export function ReportsPage({ onBack }: ReportsPageProps) {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -110,7 +114,7 @@ export function ReportsPage() {
   return (
     <div className="container mx-auto p-4 max-w-md">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
+        <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

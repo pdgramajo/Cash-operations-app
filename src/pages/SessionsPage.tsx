@@ -27,7 +27,7 @@ export function SessionsPage() {
   } = useCashSessions();
 
   if (view === 'reports') {
-    return <ReportsPage />;
+    return <ReportsPage onBack={() => setView('list')} />;
   }
 
   if (view === 'session' && selectedSession) {
