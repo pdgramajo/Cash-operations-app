@@ -529,6 +529,34 @@ function TransactionDialog({
           <DialogTitle>{getTitle()}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {type === 'sale' && (
+            <div className="space-y-2">
+              <Label>Tipo de pago</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`text-xs py-1 h-9 ${
+                    subType === 'cash' ? 'bg-green-600 text-white border-green-600' : ''
+                  }`}
+                  onClick={() => setSubType('cash')}
+                >
+                  Efectivo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`text-xs py-1 h-9 ${
+                    subType === 'transfer' ? 'bg-blue-400 text-white border-blue-400' : ''
+                  }`}
+                  onClick={() => setSubType('transfer')}
+                >
+                  Transferencia
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="amount">Monto</Label>
             <Input
@@ -541,21 +569,6 @@ function TransactionDialog({
               required
             />
           </div>
-
-          {type === 'sale' && (
-            <div className="space-y-2">
-              <Label>Tipo de pago</Label>
-              <Select value={subType} onValueChange={v => setSubType(v as 'cash' | 'transfer')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Efectivo</SelectItem>
-                  <SelectItem value="transfer">Transferencia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           {type === 'cash_withdrawal' && (
             <>
