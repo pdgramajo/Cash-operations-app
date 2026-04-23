@@ -133,8 +133,8 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
             </p>
           </Card>
           <Card className="bg-blue-50 border-blue-200 h-12 flex flex-col justify-center">
-            <p className="text-xs font-medium text-blue-700 text-center">Transferencias</p>
-            <p className="text-base font-bold text-blue-700 text-center">
+            <p className="text-xs font-medium text-blue-500 text-center">Transferencias</p>
+            <p className="text-base font-bold text-blue-500 text-center">
               {formatCurrency(transferSales)}
             </p>
           </Card>
@@ -222,7 +222,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
               <Button
                 variant="outline"
                 size="sm"
-                className={`text-xs py-1 h-7 ${transactionFilter === 'transfer' ? 'bg-blue-600 text-white border-blue-600' : ''}`}
+                className={`text-xs py-1 h-7 ${transactionFilter === 'transfer' ? 'bg-blue-400 text-white border-blue-400' : ''}`}
                 onClick={() => setTransactionFilter('transfer')}
               >
                 Transf ({filterCounts.transfer})
@@ -354,12 +354,16 @@ function TransactionItem({
   transaction: Transaction;
   onDelete?: () => void;
 }) {
-  const isPositive =
-    transaction.type === 'sale' ||
-    (transaction.type === 'cash_withdrawal' && transaction.recipientType === 'branch_transfer');
   const isNegative =
     transaction.type === 'expense' ||
     (transaction.type === 'cash_withdrawal' && transaction.recipientType !== 'branch_transfer');
+
+  const getAmountColor = () => {
+    if (isNegative) return 'text-destructive';
+    if (transaction.type === 'sale' && transaction.subType === 'cash') return 'text-green-600';
+    if (transaction.type === 'sale' && transaction.subType === 'transfer') return 'text-blue-400';
+    return '';
+  };
 
   return (
     <Card className={isNegative ? 'border-destructive/50' : ''}>
@@ -369,7 +373,11 @@ function TransactionItem({
             <p className="font-medium">
               {getTransactionTypeLabel(transaction.type)}
               {transaction.subType && (
-                <span className="text-muted-foreground ml-1">
+                <span
+                  className={`ml-1 ${
+                    transaction.subType === 'cash' ? 'text-green-600' : 'text-blue-400'
+                  }`}
+                >
                   ({getTransactionSubTypeLabel(transaction.subType)})
                 </span>
               )}
@@ -385,11 +393,7 @@ function TransactionItem({
             <p className="text-xs text-muted-foreground">{formatDateTime(transaction.createdAt)}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className={`font-bold ${
-                isPositive ? 'text-green-600' : isNegative ? 'text-destructive' : ''
-              }`}
-            >
+            <span className={`font-bold ${getAmountColor()}`}>
               {isNegative ? '-' : '+'}
               {formatCurrency(transaction.amount)}
             </span>
