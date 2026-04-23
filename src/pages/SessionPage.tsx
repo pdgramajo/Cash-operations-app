@@ -81,11 +81,21 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{session.name}</h1>
+          <div className="flex-1 relative">
+            <h1 className="text-2xl font-bold pr-16">{session.name}</h1>
             <p className="text-sm text-muted-foreground">
               {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
             </p>
+            {session.status === 'open' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-7 text-sm"
+                onClick={() => setShowCloseDialog(true)}
+              >
+                Cerrar
+              </Button>
+            )}
           </div>
           <Button variant="ghost" size="icon" onClick={onShowReports}>
             <FileText className="h-5 w-5" />
@@ -238,14 +248,6 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
           </TabsContent>
         </Tabs>
       </div>
-
-      {session.status === 'open' && (
-        <div className="flex-shrink-0 mt-4">
-          <Button variant="default" className="w-full" onClick={() => setShowCloseDialog(true)}>
-            Cerrar Sesión
-          </Button>
-        </div>
-      )}
 
       <TransactionDialog
         open={showTransactionDialog}
