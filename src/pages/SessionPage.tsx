@@ -75,162 +75,172 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{session.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
-          </p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onShowReports}>
-          <FileText className="h-5 w-5" />
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Inicial</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold">{formatCurrency(session.openingBalance)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Estimado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold">{formatCurrency(estimatedClosingBalance)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {session.status === 'open' && (
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setTransactionDialogType('sale');
-              setShowTransactionDialog(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Venta
+    <div className="container mx-auto p-4 max-w-md h-screen flex flex-col">
+      <div className="flex-shrink-0">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setTransactionDialogType('expense');
-              setShowTransactionDialog(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Gasto
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setTransactionDialogType('cash_withdrawal');
-              setShowTransactionDialog(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Retiro
-          </Button>
-        </div>
-      )}
-
-      <Tabs defaultValue="transactions">
-        <TabsList className="w-full">
-          <TabsTrigger value="transactions" className="flex-1">
-            Movimientos ({transactions.length})
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="flex-1">
-            Inventario ({movements.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="transactions" className="mt-4">
-          <div className="space-y-2">
-            {transactions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No hay transacciones</p>
-            ) : (
-              transactions.map(t => (
-                <TransactionItem
-                  key={t.id}
-                  transaction={t}
-                  onDelete={session.status === 'open' ? () => deleteTransaction(t.id) : undefined}
-                />
-              ))
-            )}
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{session.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
+            </p>
           </div>
-        </TabsContent>
+          <Button variant="ghost" size="icon" onClick={onShowReports}>
+            <FileText className="h-5 w-5" />
+          </Button>
+        </div>
 
-        <TabsContent value="inventory" className="mt-4">
-          {session.status === 'open' && (
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setMovementDialogType('incoming');
-                  setShowMovementDialog(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Entrada
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setMovementDialogType('outgoing');
-                  setShowMovementDialog(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Salida
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setMovementDialogType('transfer');
-                  setShowMovementDialog(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Transferir
-              </Button>
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Inicial</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold">{formatCurrency(session.openingBalance)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Estimado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold">{formatCurrency(estimatedClosingBalance)}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {session.status === 'open' && (
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setTransactionDialogType('sale');
+                setShowTransactionDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Venta
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setTransactionDialogType('expense');
+                setShowTransactionDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Gasto
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setTransactionDialogType('cash_withdrawal');
+                setShowTransactionDialog(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Retiro
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <Tabs defaultValue="transactions">
+          <TabsList className="w-full">
+            <TabsTrigger value="transactions" className="flex-1">
+              Movimientos ({transactions.length})
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="flex-1">
+              Inventario ({movements.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="transactions" className="mt-4 h-full">
+            <div className="h-[calc(100vh-340px)] overflow-y-auto pr-4">
+              <div className="space-y-2">
+                {transactions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No hay transacciones</p>
+                ) : (
+                  transactions.map(t => (
+                    <TransactionItem
+                      key={t.id}
+                      transaction={t}
+                      onDelete={
+                        session.status === 'open' ? () => deleteTransaction(t.id) : undefined
+                      }
+                    />
+                  ))
+                )}
+              </div>
             </div>
-          )}
-          <div className="space-y-2">
-            {movements.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No hay movimientos</p>
-            ) : (
-              movements.map(m => (
-                <MovementItem
-                  key={m.id}
-                  movement={m}
-                  onDelete={session.status === 'open' ? () => deleteMovement(m.id) : undefined}
-                  branches={branches}
-                />
-              ))
+          </TabsContent>
+
+          <TabsContent value="inventory" className="mt-4 h-full">
+            {session.status === 'open' && (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMovementDialogType('incoming');
+                    setShowMovementDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Entrada
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMovementDialogType('outgoing');
+                    setShowMovementDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Salida
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMovementDialogType('transfer');
+                    setShowMovementDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Transferir
+                </Button>
+              </div>
             )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            <div className="h-[calc(100vh-380px)] overflow-y-auto pr-4">
+              <div className="space-y-2">
+                {movements.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No hay movimientos</p>
+                ) : (
+                  movements.map(m => (
+                    <MovementItem
+                      key={m.id}
+                      movement={m}
+                      onDelete={session.status === 'open' ? () => deleteMovement(m.id) : undefined}
+                      branches={branches}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {session.status === 'open' && (
-        <div className="mt-6 space-y-3">
+        <div className="flex-shrink-0 mt-4">
           <Button variant="default" className="w-full" onClick={() => setShowCloseDialog(true)}>
             Cerrar Sesión
           </Button>
