@@ -11,6 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      base: '/Cash-operations-app/',
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Cash Operations System',
@@ -20,6 +21,7 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: '/Cash-operations-app/',
         icons: [
           {
             src: 'favicon.svg',
