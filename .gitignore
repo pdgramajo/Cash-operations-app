@@ -39,7 +39,3 @@ pnpm-debug.log*
 # Misc
 *.pid
 *.seed
-
-# Agents
-.agents/
-.mux/
