@@ -149,38 +149,41 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
         </div>
 
         {session.status === 'open' && (
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="grid grid-cols-3 gap-1 mb-3">
             <Button
               variant="outline"
               size="sm"
+              className="text-xs py-1 h-7"
               onClick={() => {
                 setTransactionDialogType('sale');
                 setShowTransactionDialog(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-3 w-3 mr-1" />
               Venta
             </Button>
             <Button
               variant="outline"
               size="sm"
+              className="text-xs py-1 h-7"
               onClick={() => {
                 setTransactionDialogType('expense');
                 setShowTransactionDialog(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-3 w-3 mr-1" />
               Gasto
             </Button>
             <Button
               variant="outline"
               size="sm"
+              className="text-xs py-1 h-7"
               onClick={() => {
                 setTransactionDialogType('cash_withdrawal');
                 setShowTransactionDialog(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-3 w-3 mr-1" />
               Retiro
             </Button>
           </div>
@@ -254,38 +257,41 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
 
           <TabsContent value="inventory" className="mt-4 h-full">
             {session.status === 'open' && (
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid grid-cols-3 gap-1 mb-3">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="text-xs py-1 h-7"
                   onClick={() => {
                     setMovementDialogType('incoming');
                     setShowMovementDialog(true);
                   }}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-3 w-3 mr-1" />
                   Entrada
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="text-xs py-1 h-7"
                   onClick={() => {
                     setMovementDialogType('outgoing');
                     setShowMovementDialog(true);
                   }}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-3 w-3 mr-1" />
                   Salida
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="text-xs py-1 h-7"
                   onClick={() => {
                     setMovementDialogType('transfer');
                     setShowMovementDialog(true);
                   }}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-3 w-3 mr-1" />
                   Transferir
                 </Button>
               </div>
