@@ -3,6 +3,14 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 
+function initTheme() {
+  const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = stored ?? (prefersDark ? 'dark' : 'light');
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme);
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -11,6 +19,7 @@ function registerServiceWorker() {
   }
 }
 
+initTheme();
 registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(

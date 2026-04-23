@@ -39,7 +39,8 @@ export function NewSessionDialog({
   onCreateBranch,
 }: NewSessionDialogProps) {
   const [name, setName] = useState('');
-  const [branchId, setBranchId] = useState<string>('');
+  const defaultBranchId = branches.length === 1 ? branches[0]!.id : '';
+  const [branchId, setBranchId] = useState<string>(defaultBranchId);
   const [openingBalance, setOpeningBalance] = useState('');
   const [notes, setNotes] = useState('');
   const [newBranchName, setNewBranchName] = useState('');

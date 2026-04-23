@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Sun, Moon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { NewSessionDialog } from '@/components/NewSessionDialog';
 import { SessionPage } from './SessionPage';
 import { ReportsPage } from './ReportsPage';
-import { useBranches, useCashSessions } from '@/hooks';
+import { useBranches, useCashSessions, useTheme } from '@/hooks';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
 import type { CashSession } from '@/types';
 
@@ -25,6 +25,7 @@ export function SessionsPage() {
     createSession,
     refetch: refetchSessions,
   } = useCashSessions();
+  const { theme, toggleTheme } = useTheme();
 
   if (view === 'reports') {
     return <ReportsPage onBack={() => setView('list')} />;
@@ -59,6 +60,9 @@ export function SessionsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Caja</h1>
         <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={toggleTheme}>
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </Button>
           <Button variant="outline" size="icon" onClick={() => setView('reports')}>
             <FileText className="h-4 w-4" />
           </Button>
