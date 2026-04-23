@@ -73,7 +73,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
   const cashSales = totals.cashSales;
   const transferSales = totals.transferSales || 0;
   const totalSales = cashSales + transferSales;
-  const dineroEnCaja = session.openingBalance + cashSales;
+  const dineroEnCaja = session.openingBalance + cashSales - totals.expenses;
 
   const transactionsByFilter = transactions.filter(t => {
     if (transactionFilter === 'all') return true;
