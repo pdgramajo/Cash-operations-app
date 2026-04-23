@@ -126,15 +126,15 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
         </div>
 
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <Card className="bg-green-50 border-green-200 h-12 flex flex-col justify-center">
-            <p className="text-xs font-medium text-green-700 text-center">Efectivo</p>
-            <p className="text-base font-bold text-green-700 text-center">
+          <Card className="h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-green-600 text-center">Efectivo</p>
+            <p className="text-base font-bold text-green-600 text-center">
               {formatCurrency(cashSales)}
             </p>
           </Card>
-          <Card className="bg-blue-50 border-blue-200 h-12 flex flex-col justify-center">
-            <p className="text-xs font-medium text-blue-500 text-center">Transferencias</p>
-            <p className="text-base font-bold text-blue-500 text-center">
+          <Card className="h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-blue-400 text-center">Transferencias</p>
+            <p className="text-base font-bold text-blue-400 text-center">
               {formatCurrency(transferSales)}
             </p>
           </Card>
