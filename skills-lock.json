@@ -5,6 +5,11 @@
       "source": "anthropics/skills",
       "sourceType": "github",
       "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
+    "react-testing-patterns": {
+      "source": "hieutrtr/ai1-skills",
+      "sourceType": "github",
+      "computedHash": "837f476e96731f0f131243950a8931b930c0b807a97da75aa2b9f151237a58be"
     }
   }
 }
