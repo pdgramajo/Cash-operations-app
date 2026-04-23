@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, X, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, X, FileText, Lock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTransactions, useInventoryMovements, useCashSessions } from '@/hooks';
 import {
@@ -49,6 +49,7 @@ interface SessionPageProps {
 
 type TransactionDialogType = 'sale' | 'expense' | 'cash_withdrawal';
 type MovementDialogType = 'incoming' | 'outgoing' | 'transfer';
+type TransactionFilter = 'all' | 'cash' | 'transfer' | 'expense';
 
 export function SessionPage({ session, onBack, branches, onShowReports }: SessionPageProps) {
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
@@ -56,6 +57,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [transactionDialogType, setTransactionDialogType] = useState<TransactionDialogType>('sale');
   const [movementDialogType, setMovementDialogType] = useState<MovementDialogType>('incoming');
+  const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>('all');
 
   const { transactions, createTransaction, deleteTransaction, getTotals } = useTransactions(
     session.id
@@ -67,6 +69,26 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
 
   const estimatedClosingBalance =
     session.openingBalance + totals.cashSales - totals.expenses - totals.withdrawals;
+
+  const cashSales = totals.cashSales;
+  const transferSales = totals.transferSales || 0;
+  const totalSales = cashSales + transferSales;
+  const dineroEnCaja = session.openingBalance + cashSales;
+
+  const transactionsByFilter = transactions.filter(t => {
+    if (transactionFilter === 'all') return true;
+    if (transactionFilter === 'cash') return t.type === 'sale' && t.subType === 'cash';
+    if (transactionFilter === 'transfer') return t.type === 'sale' && t.subType === 'transfer';
+    if (transactionFilter === 'expense') return t.type === 'expense';
+    return true;
+  });
+
+  const filterCounts = {
+    all: transactions.length,
+    cash: transactions.filter(t => t.type === 'sale' && t.subType === 'cash').length,
+    transfer: transactions.filter(t => t.type === 'sale' && t.subType === 'transfer').length,
+    expense: transactions.filter(t => t.type === 'expense').length,
+  };
 
   const getBranchName = (branchId: string | null) => {
     if (!branchId) return 'Sin sucursal';
@@ -88,11 +110,12 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
             </p>
             {session.status === 'open' && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 className="absolute right-0 top-0 h-7 text-sm"
                 onClick={() => setShowCloseDialog(true)}
               >
+                <Lock className="h-3 w-3 mr-1" />
                 Cerrar
               </Button>
             )}
@@ -102,22 +125,26 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Inicial</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{formatCurrency(session.openingBalance)}</p>
-            </CardContent>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <Card className="bg-green-50 border-green-200 h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-green-700 text-center">Efectivo</p>
+            <p className="text-base font-bold text-green-700 text-center">
+              {formatCurrency(cashSales)}
+            </p>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Estimado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{formatCurrency(estimatedClosingBalance)}</p>
-            </CardContent>
+          <Card className="bg-blue-50 border-blue-200 h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-blue-700 text-center">Transferencias</p>
+            <p className="text-base font-bold text-blue-700 text-center">
+              {formatCurrency(transferSales)}
+            </p>
+          </Card>
+          <Card className="h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-center">Total Ventas</p>
+            <p className="text-base font-bold text-center">{formatCurrency(totalSales)}</p>
+          </Card>
+          <Card className="h-12 flex flex-col justify-center">
+            <p className="text-xs font-medium text-center">Dinero Caja</p>
+            <p className="text-base font-bold text-center">{formatCurrency(dineroEnCaja)}</p>
           </Card>
         </div>
 
@@ -172,12 +199,46 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
           </TabsList>
 
           <TabsContent value="transactions" className="mt-4 h-full">
+            <div className="grid grid-cols-4 gap-1 mb-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className={`text-xs py-1 h-7 ${transactionFilter === 'all' ? 'bg-gray-600 text-white border-gray-600' : ''}`}
+                onClick={() => setTransactionFilter('all')}
+              >
+                Todos ({filterCounts.all})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`text-xs py-1 h-7 ${transactionFilter === 'cash' ? 'bg-green-600 text-white border-green-600' : ''}`}
+                onClick={() => setTransactionFilter('cash')}
+              >
+                Efectivo ({filterCounts.cash})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`text-xs py-1 h-7 ${transactionFilter === 'transfer' ? 'bg-blue-600 text-white border-blue-600' : ''}`}
+                onClick={() => setTransactionFilter('transfer')}
+              >
+                Transf ({filterCounts.transfer})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`text-xs py-1 h-7 ${transactionFilter === 'expense' ? 'bg-red-600 text-white border-red-600' : ''}`}
+                onClick={() => setTransactionFilter('expense')}
+              >
+                Gastos ({filterCounts.expense})
+              </Button>
+            </div>
             <div className="h-[calc(100vh-340px)] overflow-y-auto pr-4">
               <div className="space-y-2">
-                {transactions.length === 0 ? (
+                {transactionsByFilter.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No hay transacciones</p>
                 ) : (
-                  transactions.map(t => (
+                  transactionsByFilter.map(t => (
                     <TransactionItem
                       key={t.id}
                       transaction={t}
