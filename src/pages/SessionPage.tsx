@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -44,12 +44,13 @@ interface SessionPageProps {
   session: CashSession;
   onBack: () => void;
   branches: Branch[];
+  onShowReports: () => void;
 }
 
 type TransactionDialogType = 'sale' | 'expense' | 'cash_withdrawal';
 type MovementDialogType = 'incoming' | 'outgoing' | 'transfer';
 
-export function SessionPage({ session, onBack, branches }: SessionPageProps) {
+export function SessionPage({ session, onBack, branches, onShowReports }: SessionPageProps) {
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [showMovementDialog, setShowMovementDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -85,6 +86,9 @@ export function SessionPage({ session, onBack, branches }: SessionPageProps) {
             {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
           </p>
         </div>
+        <Button variant="ghost" size="icon" onClick={onShowReports}>
+          <FileText className="h-5 w-5" />
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
