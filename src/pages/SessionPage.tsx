@@ -63,17 +63,20 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
     session.id
   );
   const { movements, createMovement, deleteMovement } = useInventoryMovements(session.id);
-  const { closeSession } = useCashSessions();
+  const { closeSession, updateSession } = useCashSessions();
+  const [editingOpeningBalance, setEditingOpeningBalance] = useState(false);
+  const [tempOpeningBalance, setTempOpeningBalance] = useState(session.openingBalance.toString());
+  const [currentSession, setCurrentSession] = useState(session);
 
   const totals = getTotals();
 
   const estimatedClosingBalance =
-    session.openingBalance + totals.cashSales - totals.expenses - totals.withdrawals;
+    currentSession.openingBalance + totals.cashSales - totals.expenses - totals.withdrawals;
 
   const cashSales = totals.cashSales;
   const transferSales = totals.transferSales || 0;
   const totalSales = cashSales + transferSales;
-  const dineroEnCaja = session.openingBalance + cashSales - totals.expenses;
+  const dineroEnCaja = currentSession.openingBalance + cashSales - totals.expenses;
 
   const transactionsByFilter = transactions.filter(t => {
     if (transactionFilter === 'all') return true;
@@ -108,6 +111,54 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
             <p className="text-sm text-muted-foreground">
               {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
             </p>
+            {session.status === 'open' && !editingOpeningBalance && (
+              <button
+                type="button"
+                className="text-xs text-blue-500 underline mt-1"
+                onClick={() => setEditingOpeningBalance(true)}
+              >
+                Saldo inicial: {formatCurrency(currentSession.openingBalance)}
+              </button>
+            )}
+            {session.status === 'open' && editingOpeningBalance && (
+              <div className="flex items-center gap-1 mt-1">
+                <input
+                  type="number"
+                  className="text-xs border rounded px-1 py-0.5 w-20"
+                  value={tempOpeningBalance}
+                  onChange={e => setTempOpeningBalance(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="text-xs text-green-600"
+                  onClick={async () => {
+                    const newBalance = parseFloat(tempOpeningBalance);
+                    if (!isNaN(newBalance)) {
+                      await updateSession(currentSession.id, { openingBalance: newBalance });
+                      setCurrentSession(prev => ({ ...prev, openingBalance: newBalance }));
+                    }
+                    setEditingOpeningBalance(false);
+                  }}
+                >
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  className="text-xs text-red-500"
+                  onClick={() => {
+                    setTempOpeningBalance(session.openingBalance.toString());
+                    setEditingOpeningBalance(false);
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {session.status === 'closed' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Saldo inicial: {formatCurrency(currentSession.openingBalance)}
+              </p>
+            )}
             {session.status === 'open' && (
               <Button
                 variant="outline"
