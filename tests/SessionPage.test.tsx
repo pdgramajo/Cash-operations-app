@@ -71,6 +71,7 @@ vi.mock('@/lib/repos', () => ({
     getBySession: vi.fn().mockResolvedValue([]),
     create: vi.fn().mockResolvedValue(createMockTransaction()),
     softDelete: vi.fn().mockResolvedValue(undefined),
+    getTopSaleAmountsYesterday: vi.fn().mockResolvedValue([]),
   },
   inventoryMovementRepository: {
     getBySession: vi.fn().mockResolvedValue([]),
