@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, X, FileText, Lock } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTransactions, useInventoryMovements, useCashSessions } from '@/hooks';
+import { transactionRepository } from '@/lib/repos';
 import {
   formatCurrency,
   formatDateTime,
@@ -368,6 +369,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
       </div>
 
       <TransactionDialog
+        key={showTransactionDialog ? 'open' : 'closed'}
         open={showTransactionDialog}
         onOpenChange={setShowTransactionDialog}
         type={transactionDialogType}
@@ -530,6 +532,22 @@ function TransactionDialog({
   const [recipientType, setRecipientType] = useState<RecipientType>('owner');
   const [recipientName, setRecipientName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [quickAmounts, setQuickAmounts] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (type !== 'sale' || !branchId) return;
+
+    let cancelled = false;
+    transactionRepository.getTopSaleAmountsYesterday(branchId).then(amounts => {
+      if (!cancelled) {
+        setQuickAmounts(amounts);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -619,6 +637,21 @@ function TransactionDialog({
               onChange={e => setAmount(e.target.value)}
               required
             />
+            {type === 'sale' && quickAmounts.length > 0 && (
+              <div className="flex gap-1">
+                {quickAmounts.map(quickAmount => (
+                  <Button
+                    key={quickAmount}
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-7 px-1 py-0 text-xs"
+                    onClick={() => setAmount(quickAmount.toString())}
+                  >
+                    {formatCurrency(quickAmount)}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
           {type === 'cash_withdrawal' && (

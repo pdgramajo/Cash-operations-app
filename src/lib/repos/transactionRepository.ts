@@ -55,4 +55,30 @@ export const transactionRepository = {
       .and(t => !t.isDeleted)
       .toArray();
   },
+
+  async getTopSaleAmountsYesterday(branchId: string | null, limit = 5): Promise<number[]> {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const transactions = await db.transactions
+      .where('createdAt')
+      .between(yesterday, today)
+      .and(t => !t.isDeleted && t.type === 'sale' && (branchId === null || t.branchId === branchId))
+      .toArray();
+
+    const amountCounts = new Map<number, number>();
+    for (const t of transactions) {
+      const amount = Math.round(t.amount * 100) / 100;
+      amountCounts.set(amount, (amountCounts.get(amount) || 0) + 1);
+    }
+
+    return Array.from(amountCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([amount]) => amount);
+  },
 };
