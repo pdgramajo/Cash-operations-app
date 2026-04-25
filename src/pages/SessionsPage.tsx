@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Plus, FileText, Sun, Moon, Trash2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, FileText, Sun, Moon, Trash2, Download, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -14,11 +15,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { NewSessionDialog } from '@/components/NewSessionDialog';
 import { SessionPage } from './SessionPage';
 import { ReportsPage } from './ReportsPage';
-import { useBranches, useCashSessions, useTheme } from '@/hooks';
+import { useBranches, useCashSessions, useTheme, useTransactions } from '@/hooks';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
+import {
+  exportSession,
+  parseExportFile,
+  type ExportSessionData,
+} from '@/lib/services/exportService';
+import { importSession } from '@/lib/services/importService';
 import type { CashSession } from '@/types';
 
 type View = 'list' | 'session' | 'reports';
@@ -28,6 +43,12 @@ export function SessionsPage() {
   const [selectedSession, setSelectedSession] = useState<CashSession | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<CashSession | null>(null);
+  const [sessionToExport, setSessionToExport] = useState<CashSession | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importData, setImportData] = useState<ExportSessionData | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { branches, createBranch } = useBranches();
   const {
@@ -38,6 +59,59 @@ export function SessionsPage() {
     refetch: refetchSessions,
   } = useCashSessions();
   const { theme, toggleTheme } = useTheme();
+
+  const { getBySession } = useTransactions('');
+
+  const handleExport = async () => {
+    if (!sessionToExport) return;
+    const transactions = await getBySession(sessionToExport.id);
+    exportSession(sessionToExport, transactions, branches);
+    setSessionToExport(null);
+  };
+
+  const handleImportClick = () => {
+    setImportError(null);
+    setImportData(null);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      const data = parseExportFile(content);
+
+      if (!data) {
+        setImportError('Archivo inválido. Seleccione un archivo JSON válido.');
+      } else {
+        setImportData(data);
+        setImportError(null);
+      }
+    } catch {
+      setImportError('Error al leer el archivo');
+    }
+
+    e.target.value = '';
+    setShowImportDialog(true);
+  };
+
+  const handleImportConfirm = async () => {
+    if (!importData) return;
+
+    setImporting(true);
+    const result = await importSession(importData);
+    setImporting(false);
+
+    if (result.success) {
+      setShowImportDialog(false);
+      setImportData(null);
+      refetchSessions();
+    } else {
+      setImportError(result.error || 'Error al importar');
+    }
+  };
 
   if (view === 'reports') {
     return <ReportsPage onBack={() => setView('list')} />;
@@ -77,6 +151,10 @@ export function SessionsPage() {
           </Button>
           <Button variant="outline" size="icon" onClick={() => setView('reports')}>
             <FileText className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleImportClick}>
+            <Upload className="h-4 w-4 mr-1" />
+            Importar
           </Button>
           <Button onClick={() => setShowNewSession(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -154,17 +232,30 @@ export function SessionsPage() {
                             {getBranchName(session.branchId)} • {formatDate(session.openedAt)}
                           </CardDescription>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setSessionToDelete(session);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setSessionToExport(session);
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setSessionToDelete(session);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -221,6 +312,85 @@ export function SessionsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={!!sessionToExport}
+        onOpenChange={open => !open && setSessionToExport(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exportar Sesión</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Exportar sesión "{sessionToExport?.name}"? Se incluirá con todas sus transacciones.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleExport}>Exportar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importar Sesión</DialogTitle>
+            <DialogDescription>
+              {importError ? (
+                <span className="text-red-500">{importError}</span>
+              ) : importData ? (
+                <div className="space-y-2 mt-2">
+                  <p>
+                    <strong>Nombre:</strong> {importData.session.name}
+                  </p>
+                  <p>
+                    <strong>Fecha apertura:</strong> {formatDate(importData.session.openedAt)}
+                  </p>
+                  <p>
+                    <strong>Monto apertura:</strong>{' '}
+                    {formatCurrency(importData.session.openingBalance)}
+                  </p>
+                  <p>
+                    <strong>Transacciones:</strong> {importData.transactions.length}
+                  </p>
+                  {importData.session.status === 'closed' && importData.session.closingBalance && (
+                    <p>
+                      <strong>Cierre:</strong> {formatCurrency(importData.session.closingBalance)}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                'Seleccione un archivo JSON para importar.'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowImportDialog(false);
+                setImportData(null);
+                setImportError(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            {importData && (
+              <Button onClick={handleImportConfirm} disabled={importing}>
+                {importing ? 'Importando...' : 'Importar'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

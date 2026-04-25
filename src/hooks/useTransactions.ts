@@ -72,12 +72,17 @@ export function useTransactions(sessionId: string | null) {
     };
   }, [transactions]);
 
+  const getBySession = useCallback(async (sid: string): Promise<Transaction[]> => {
+    return transactionRepository.getBySession(sid);
+  }, []);
+
   return {
     transactions,
     loading,
     createTransaction,
     deleteTransaction,
     getTotals,
+    getBySession,
     refetch: fetchTransactions,
   };
 }
