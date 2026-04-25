@@ -534,13 +534,15 @@ function TransactionDialog({
   const [loading, setLoading] = useState(false);
   const [quickAmounts, setQuickAmounts] = useState<number[]>([]);
 
+  const defaultQuickAmounts = [1000, 2000, 4000, 5000, 10000];
+
   useEffect(() => {
     if (type !== 'sale' || !branchId) return;
 
     let cancelled = false;
     transactionRepository.getTopSaleAmountsYesterday(branchId).then(amounts => {
       if (!cancelled) {
-        setQuickAmounts(amounts);
+        setQuickAmounts(amounts.length > 0 ? amounts : defaultQuickAmounts);
       }
     });
 

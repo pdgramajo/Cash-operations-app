@@ -188,6 +188,50 @@ describe('SessionPage', () => {
       expect(screen.getByText('Nueva Venta')).toBeInTheDocument();
     });
 
+    it('should show default quick amount pills when no previous sales', async () => {
+      const user = userEvent.setup();
+      vi.mocked(transactionRepository.getTopSaleAmountsYesterday).mockResolvedValue([]);
+
+      const session = createMockSession({ status: 'open' });
+      render(
+        <SessionPage
+          session={session}
+          onBack={vi.fn()}
+          branches={[mockBranch]}
+          onShowReports={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByText('Venta'));
+      await screen.findByText('Nueva Venta');
+
+      const pills = await screen.findAllByText(/\$/);
+      expect(pills.length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('should show quick amount pills from previous sales when available', async () => {
+      const user = userEvent.setup();
+      vi.mocked(transactionRepository.getTopSaleAmountsYesterday).mockResolvedValue([
+        3000, 7000, 1500,
+      ]);
+
+      const session = createMockSession({ status: 'open' });
+      render(
+        <SessionPage
+          session={session}
+          onBack={vi.fn()}
+          branches={[mockBranch]}
+          onShowReports={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByText('Venta'));
+      await screen.findByText('Nueva Venta');
+
+      const pills = await screen.findAllByText(/\$/, {}, { timeout: 5000 });
+      expect(pills.length).toBeGreaterThanOrEqual(3);
+    });
+
     it('should create cash sale transaction', async () => {
       const user = userEvent.setup();
       vi.mocked(transactionRepository.create).mockResolvedValue(
