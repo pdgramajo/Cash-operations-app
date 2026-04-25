@@ -1,9 +1,19 @@
 import { useState } from 'react';
-import { Plus, FileText, Sun, Moon } from 'lucide-react';
+import { Plus, FileText, Sun, Moon, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { NewSessionDialog } from '@/components/NewSessionDialog';
 import { SessionPage } from './SessionPage';
 import { ReportsPage } from './ReportsPage';
@@ -17,12 +27,14 @@ export function SessionsPage() {
   const [view, setView] = useState<View>('list');
   const [selectedSession, setSelectedSession] = useState<CashSession | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<CashSession | null>(null);
 
   const { branches, createBranch } = useBranches();
   const {
     sessions,
     loading: sessionsLoading,
     createSession,
+    deleteSession,
     refetch: refetchSessions,
   } = useCashSessions();
   const { theme, toggleTheme } = useTheme();
@@ -142,6 +154,17 @@ export function SessionsPage() {
                             {getBranchName(session.branchId)} • {formatDate(session.openedAt)}
                           </CardDescription>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSessionToDelete(session);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -169,6 +192,35 @@ export function SessionsPage() {
         onCreateSession={createSession}
         onCreateBranch={createBranch}
       />
+
+      <AlertDialog
+        open={!!sessionToDelete}
+        onOpenChange={open => !open && setSessionToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Sesión</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar la sesión "{sessionToDelete?.name}"? Esta acción no se puede
+              deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (sessionToDelete) {
+                  await deleteSession(sessionToDelete.id);
+                  setSessionToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
