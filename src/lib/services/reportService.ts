@@ -4,9 +4,6 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
-  getTransactionTypeLabel,
-  getTransactionSubTypeLabel,
-  getRecipientTypeLabel,
   getMovementTypeLabel,
   getMovementUnitLabel,
 } from '@/lib/formatters';
@@ -34,138 +31,167 @@ export function generateSessionReport(
   const branch = branches.find(b => b.id === session.branchId);
   const branchName = branch?.name || 'Sin sucursal';
 
-  doc.setFontSize(20);
+  const cashSales = transactions.filter(t => t.type === 'sale' && t.subType === 'cash');
+  const transferSales = transactions.filter(t => t.type === 'sale' && t.subType === 'transfer');
+  const expenses = transactions.filter(t => t.type === 'expense');
+  const withdrawals = transactions.filter(t => t.type === 'cash_withdrawal');
+
+  const totalCashSales = cashSales.reduce((sum, t) => sum + t.amount, 0);
+  const totalTransferSales = transferSales.reduce((sum, t) => sum + t.amount, 0);
+  const totalSales = totalCashSales + totalTransferSales;
+  const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
+  const totalWithdrawals = withdrawals.reduce((sum, t) => sum + t.amount, 0);
+
+  const closingBalance = session.closingBalance || session.openingBalance;
+
+  const writeLine = (label: string, value: string, indent: number = 0) => {
+    doc.text(label, margin + indent, y);
+    doc.text(value, pageWidth - margin, y, { align: 'right' });
+  };
+
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORTE DE SESIÓN', pageWidth / 2, y, { align: 'center' });
-  y += 10;
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Sucursal: ${branchName}`, margin, y);
-  y += 6;
-  doc.text(`Sesión: ${session.name}`, margin, y);
-  y += 6;
-  doc.text(`Fecha: ${formatDate(session.openedAt)}`, margin, y);
-  y += 6;
-  doc.text(
-    `Horario: ${formatDateTime(session.openedAt)} - ${formatDateTime(session.closedAt)}`,
-    margin,
-    y
-  );
-  y += 10;
-
-  doc.setDrawColor(200);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 10;
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESUMEN', margin, y);
+  doc.text('REPORTE DE SESIÓN', margin, y);
   y += 8;
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
 
-  const cashSales = transactions
-    .filter(t => t.type === 'sale' && t.subType === 'cash')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const transferSales = transactions
-    .filter(t => t.type === 'sale' && t.subType === 'transfer')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalSales = cashSales + transferSales;
-  const expenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const withdrawals = transactions
-    .filter(t => t.type === 'cash_withdrawal')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const closingBalance = session.closingBalance || session.openingBalance;
-
-  doc.text(`Saldo inicial: ${formatCurrency(session.openingBalance)}`, margin, y);
+  writeLine('Sucursal', branchName);
   y += 6;
-  doc.text(`Ventas efectivo: ${formatCurrency(cashSales)}`, margin, y);
+  writeLine('Sesión', session.name);
   y += 6;
-  doc.text(`Ventas transferencia: ${formatCurrency(transferSales)}`, margin, y);
+  writeLine('Apertura', formatDateTime(session.openedAt));
   y += 6;
-  doc.text(`Total ventas: ${formatCurrency(totalSales)}`, margin, y);
-  y += 6;
-  doc.text(`Gastos: ${formatCurrency(expenses)}`, margin, y);
-  y += 6;
-  doc.text(`Retiros: ${formatCurrency(withdrawals)}`, margin, y);
+  writeLine('Cierre', session.closedAt ? formatDateTime(session.closedAt) : '-');
+  y += 12;
+
+  doc.setDrawColor(220);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 8;
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('ENTRADAS', margin, y);
   y += 10;
 
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+
+  writeLine('Saldo inicial', formatCurrency(session.openingBalance));
+  y += 7;
+  writeLine('Ventas efectivo', formatCurrency(totalCashSales));
+  y += 7;
+  writeLine('Ventas transferencia', formatCurrency(totalTransferSales));
+  y += 7;
+
+  const totalEntradas = session.openingBalance + totalSales;
+  y += 2;
   doc.setFont('helvetica', 'bold');
-  doc.text(`CAJA CIERRA: ${formatCurrency(closingBalance)}`, margin, y);
-  y += 15;
+  writeLine('Total entradas', formatCurrency(totalEntradas));
+  y += 10;
 
-  if (transactions.length > 0) {
-    doc.setDrawColor(200);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 10;
+  doc.setFont('helvetica', 'normal');
+  doc.setDrawColor(220);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 8;
 
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MOVIMIENTOS', margin, y);
-    y += 8;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SALIDAS', margin, y);
+  y += 10;
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
 
-    transactions.forEach(t => {
-      if (y > 270) {
-        doc.addPage();
-        y = margin;
-      }
+  writeLine('Gastos', formatCurrency(totalExpenses));
+  y += 7;
+  writeLine('Retiros', formatCurrency(totalWithdrawals));
+  y += 7;
 
-      const typeLabel = getTransactionTypeLabel(t.type);
-      const subTypeLabel = t.subType ? ` (${getTransactionSubTypeLabel(t.subType)})` : '';
-      const recipientLabel = t.recipientType
-        ? ` - ${t.recipientName || ''} (${getRecipientTypeLabel(t.recipientType)})`
-        : '';
-      const noteLabel = t.note ? ` - ${t.note}` : '';
+  const totalSalidas = totalExpenses + totalWithdrawals;
+  y += 2;
+  doc.setFont('helvetica', 'bold');
+  writeLine('Total salidas', formatCurrency(totalSalidas));
+  y += 10;
 
-      const line = `${formatDateTime(t.createdAt)} | ${typeLabel}${subTypeLabel}${recipientLabel}${noteLabel}: ${formatCurrency(t.amount)}`;
-      const lines = doc.splitTextToSize(line, pageWidth - margin * 2);
-      doc.text(lines, margin, y);
-      y += lines.length * 5 + 3;
-    });
-  }
+  doc.setFont('helvetica', 'normal');
+  doc.setDrawColor(220);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 8;
+
+  writeLine('Efectivo en caja', formatCurrency(closingBalance));
 
   if (movements.length > 0) {
-    y += 5;
-    doc.setDrawColor(200);
-    doc.line(margin, y, pageWidth - margin, y);
     y += 10;
+    doc.setDrawColor(220);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('MOVIMIENTOS INTERNOS', margin, y);
-    y += 8;
+    doc.text('INVENTARIO', margin, y);
+    y += 10;
 
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
 
-    movements.forEach(m => {
+    const addMovementLine = (m: InventoryMovement, prefix: string) => {
       if (y > 270) {
         doc.addPage();
         y = margin;
       }
-
       const unitLabel = m.unit ? ` ${getMovementUnitLabel(m.unit)}` : '';
       const qtyLabel = m.estimatedQuantity ? ` (${m.estimatedQuantity}${unitLabel})` : '';
       const targetBranch = m.targetBranchId
         ? ` → ${branches.find(b => b.id === m.targetBranchId)?.name || ''}`
         : '';
+      const desc = `${m.description}${qtyLabel}${targetBranch}`;
+      doc.text(`${prefix} ${desc}`, margin, y);
+      y += 6;
+    };
 
-      const line = `${formatDateTime(m.createdAt)} | ${getMovementTypeLabel(m.type)}: ${m.description}${qtyLabel}${targetBranch}`;
-      const lines = doc.splitTextToSize(line, pageWidth - margin * 2);
-      doc.text(lines, margin, y);
-      y += lines.length * 5 + 3;
-    });
+    const incoming = movements.filter(m => m.type === 'incoming');
+    const outgoing = movements.filter(m => m.type === 'outgoing');
+    const transfers = movements.filter(m => m.type === 'transfer');
+    const adjustments = movements.filter(
+      m => m.type === 'adjustment' || m.type === 'damaged' || m.type === 'return'
+    );
+
+    if (incoming.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('ENTRADA', margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      incoming.forEach(m => addMovementLine(m, '-'));
+      y += 4;
+    }
+
+    if (outgoing.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('SALIDA', margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      outgoing.forEach(m => addMovementLine(m, '-'));
+      y += 4;
+    }
+
+    if (transfers.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('TRANSFERENCIA', margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      transfers.forEach(m => addMovementLine(m, '-'));
+      y += 4;
+    }
+
+    if (adjustments.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('AJUSTE/OTRO', margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      adjustments.forEach(m => addMovementLine(m, '-'));
+    }
   }
 
   return doc;
