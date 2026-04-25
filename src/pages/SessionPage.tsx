@@ -77,7 +77,8 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
   const cashSales = totals.cashSales;
   const transferSales = totals.transferSales || 0;
   const totalSales = cashSales + transferSales;
-  const dineroEnCaja = currentSession.openingBalance + cashSales - totals.expenses;
+  const dineroEnCaja =
+    currentSession.openingBalance + cashSales - totals.expenses - totals.withdrawals;
 
   const transactionsByFilter = transactions.filter(t => {
     if (transactionFilter === 'all') return true;
@@ -549,7 +550,7 @@ function TransactionDialog({
     return () => {
       cancelled = true;
     };
-  }, [branchId, type]);
+  }, [branchId, type, defaultQuickAmounts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

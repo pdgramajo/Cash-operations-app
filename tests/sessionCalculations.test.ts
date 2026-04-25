@@ -86,9 +86,10 @@ function createMockTransactions(totals: {
 function calculateDineroEnCaja(
   openingBalance: number,
   cashSales: number,
-  expenses: number
+  expenses: number,
+  withdrawals: number
 ): number {
-  return openingBalance + cashSales - expenses;
+  return openingBalance + cashSales - expenses - withdrawals;
 }
 
 function calculateEstimatedClosingBalance(
@@ -135,10 +136,11 @@ describe('Session calculations', () => {
       const result = calculateDineroEnCaja(
         session.openingBalance,
         totals.cashSales,
-        totals.expenses
+        totals.expenses,
+        totals.withdrawals
       );
 
-      expect(result).toBe(550); // 500 + 100 - 50
+      expect(result).toBe(525); // 500 + 100 - 50 - 25
     });
 
     it('should return only openingBalance when no cash sales or expenses', () => {
@@ -151,10 +153,11 @@ describe('Session calculations', () => {
       const result = calculateDineroEnCaja(
         session.openingBalance,
         totals.cashSales,
-        totals.expenses
+        totals.expenses,
+        totals.withdrawals
       );
 
-      expect(result).toBe(500); // 500 + 0 - 0
+      expect(result).toBe(500); // 500 + 0 - 0 - 0
     });
 
     it('should handle multiple expenses', () => {
@@ -168,10 +171,11 @@ describe('Session calculations', () => {
       const result = calculateDineroEnCaja(
         session.openingBalance,
         totals.cashSales,
-        totals.expenses
+        totals.expenses,
+        totals.withdrawals
       );
 
-      expect(result).toBe(1150); // 1000 + 300 - 150
+      expect(result).toBe(1150); // 1000 + 300 - 150 - 0
     });
 
     it('should handle zero opening balance', () => {
@@ -185,10 +189,11 @@ describe('Session calculations', () => {
       const result = calculateDineroEnCaja(
         session.openingBalance,
         totals.cashSales,
-        totals.expenses
+        totals.expenses,
+        totals.withdrawals
       );
 
-      expect(result).toBe(400); // 0 + 500 - 100
+      expect(result).toBe(400); // 0 + 500 - 100 - 0
     });
   });
 
@@ -225,7 +230,8 @@ describe('Session calculations', () => {
       const dineroEnCaja = calculateDineroEnCaja(
         session.openingBalance,
         totals.cashSales,
-        totals.expenses
+        totals.expenses,
+        totals.withdrawals
       );
       const closingBalance = calculateEstimatedClosingBalance(
         session.openingBalance,
@@ -234,8 +240,8 @@ describe('Session calculations', () => {
         totals.withdrawals
       );
 
-      expect(closingBalance).toBe(dineroEnCaja - totals.withdrawals);
-      expect(closingBalance).toBe(575);
+      expect(dineroEnCaja).toBe(575);
+      expect(closingBalance).toBe(575); // 500 + 200 - 75 - 50
     });
   });
 
