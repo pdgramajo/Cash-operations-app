@@ -192,34 +192,34 @@ export function SessionsPage() {
 
   return (
     <div className="container mx-auto p-4 max-w-md">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Caja</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={toggleTheme}>
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => setView('reports')}>
-            <FileText className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setShowReceiptsDialog(true);
-              loadReceipts();
-            }}
-          >
-            <Package className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleImportClick}>
-            <Upload className="h-4 w-4 mr-1" />
-            Importar
-          </Button>
-          <Button onClick={() => setShowNewSession(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva
-          </Button>
-        </div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Button variant="outline" size="sm" onClick={toggleTheme}>
+          {theme === 'light' ? <Moon className="h-4 w-4 mr-1" /> : <Sun className="h-4 w-4 mr-1" />}
+          Tema
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setView('reports')}>
+          <FileText className="h-4 w-4 mr-1" />
+          Reportes
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setShowReceiptsDialog(true);
+            loadReceipts();
+          }}
+        >
+          <Package className="h-4 w-4 mr-1" />
+          Recepciones
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleImportClick}>
+          <Upload className="h-4 w-4 mr-1" />
+          Importar
+        </Button>
+        <Button onClick={() => setShowNewSession(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nueva sesión
+        </Button>
       </div>
 
       {openSessions.length > 0 && (
