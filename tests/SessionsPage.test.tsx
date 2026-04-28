@@ -44,9 +44,13 @@ vi.mock('@/lib/repos', () => ({
     getBySession: vi.fn().mockResolvedValue([]),
     create: vi.fn().mockResolvedValue({}),
     delete: vi.fn().mockResolvedValue(undefined),
+    getIncomingByDateRange: vi.fn().mockResolvedValue([]),
   },
   branchRepository: {
     getAll: vi.fn().mockResolvedValue([mockBranch]),
+  },
+  receiptTypeRepository: {
+    getAll: vi.fn().mockResolvedValue([]),
   },
 }));
 

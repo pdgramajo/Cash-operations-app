@@ -81,6 +81,10 @@ vi.mock('@/lib/repos', () => ({
   branchRepository: {
     getAll: vi.fn().mockResolvedValue([mockBranch]),
   },
+  receiptTypeRepository: {
+    getAll: vi.fn().mockResolvedValue([]),
+    create: vi.fn().mockResolvedValue({ id: '1', name: 'res', createdAt: new Date() }),
+  },
 }));
 
 import { transactionRepository, inventoryMovementRepository } from '@/lib/repos';
