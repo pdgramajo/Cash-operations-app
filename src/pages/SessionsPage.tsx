@@ -214,7 +214,7 @@ export function SessionsPage() {
           Recepciones
         </Button>
         <Button variant="outline" size="sm" onClick={handleImportClick} className="gap-1">
-          <Upload className="h-4 w-4" />
+          <Download className="h-4 w-4" />
           Importar
         </Button>
         <Button onClick={() => setShowNewSession(true)} className="col-span-2 sm:col-span-3 gap-1">
@@ -308,7 +308,7 @@ export function SessionsPage() {
                               setSessionToExport(session);
                             }}
                           >
-                            <Download className="h-4 w-4" />
+                            <Upload className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
