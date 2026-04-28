@@ -191,8 +191,8 @@ export function SessionsPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+    <div className="container mx-auto p-4 max-w-md min-h-screen flex flex-col">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4 flex-shrink-0">
         <Button variant="outline" size="sm" onClick={toggleTheme} className="gap-1">
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           Tema
@@ -273,7 +273,7 @@ export function SessionsPage() {
           ) : closedSessions.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No hay sesiones cerradas</p>
           ) : (
-            <ScrollArea className="h-[500px]">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-2 pr-4">
                 {closedSessions.map(session => (
                   <Card
