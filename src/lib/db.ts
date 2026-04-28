@@ -1,5 +1,12 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Branch, CashSession, Transaction, InventoryMovement, Report } from '@/types';
+import type {
+  Branch,
+  CashSession,
+  Transaction,
+  InventoryMovement,
+  Report,
+  ReceiptType,
+} from '@/types';
 
 export class CashOperationsDB extends Dexie {
   branches!: EntityTable<Branch, 'id'>;
@@ -7,6 +14,7 @@ export class CashOperationsDB extends Dexie {
   transactions!: EntityTable<Transaction, 'id'>;
   inventoryMovements!: EntityTable<InventoryMovement, 'id'>;
   reports!: EntityTable<Report, 'id'>;
+  receiptTypes!: EntityTable<ReceiptType, 'id'>;
 
   constructor() {
     super('cashOperationsDB');
@@ -17,6 +25,10 @@ export class CashOperationsDB extends Dexie {
       transactions: 'id, sessionId, branchId, type, createdAt, isDeleted',
       inventoryMovements: 'id, sessionId, branchId, type, createdAt',
       reports: 'id, type, createdAt, branchId',
+    });
+
+    this.version(2).stores({
+      receiptTypes: 'id, name, createdAt',
     });
   }
 }

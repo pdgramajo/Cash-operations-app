@@ -29,6 +29,7 @@ export function useInventoryMovements(sessionId: string | null) {
       branchId: string | null;
       type: InventoryMovement['type'];
       description: string;
+      receiptType?: string;
       estimatedQuantity?: number;
       unit?: InventoryMovement['unit'];
       targetBranchId?: string;

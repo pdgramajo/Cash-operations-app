@@ -36,6 +36,12 @@ export interface Branch {
   createdAt: Date;
 }
 
+export interface ReceiptType {
+  id: string;
+  name: string;
+  createdAt: Date;
+}
+
 export interface CashSession {
   id: string;
   name: string;
@@ -68,6 +74,7 @@ export interface InventoryMovement {
   branchId: string | null;
   type: InventoryMovementType;
   description: string;
+  receiptType?: string;
   estimatedQuantity?: number;
   unit?: MovementUnit;
   targetBranchId?: string;

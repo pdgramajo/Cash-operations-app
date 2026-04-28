@@ -7,6 +7,7 @@ export interface CreateInventoryMovementData {
   branchId: string | null;
   type: InventoryMovementType;
   description: string;
+  receiptType?: string;
   estimatedQuantity?: number;
   unit?: MovementUnit;
   targetBranchId?: string;
@@ -28,6 +29,7 @@ export const inventoryMovementRepository = {
       branchId: data.branchId,
       type: data.type,
       description: data.description,
+      receiptType: data.receiptType,
       estimatedQuantity: data.estimatedQuantity,
       unit: data.unit,
       targetBranchId: data.targetBranchId,
@@ -43,5 +45,13 @@ export const inventoryMovementRepository = {
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
     return db.inventoryMovements.where('createdAt').between(startDate, endDate).toArray();
+  },
+
+  async getIncomingByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
+    const all = await db.inventoryMovements
+      .where('createdAt')
+      .between(startDate, endDate)
+      .toArray();
+    return all.filter(m => m.type === 'incoming');
   },
 };

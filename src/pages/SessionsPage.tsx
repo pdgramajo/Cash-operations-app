@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, FileText, Sun, Moon, Trash2, Download, Upload } from 'lucide-react';
+import { Plus, FileText, Sun, Moon, Trash2, Download, Upload, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,9 +34,12 @@ import {
   type ExportSessionData,
 } from '@/lib/services/exportService';
 import { importSession } from '@/lib/services/importService';
-import type { CashSession } from '@/types';
+import { inventoryMovementRepository } from '@/lib/repos';
+import type { CashSession, InventoryMovement } from '@/types';
 
 type View = 'list' | 'session' | 'reports';
+
+type ReceiptFilter = 'week' | 'month' | 'custom';
 
 export function SessionsPage() {
   const [view, setView] = useState<View>('list');
@@ -48,6 +51,9 @@ export function SessionsPage() {
   const [importData, setImportData] = useState<ExportSessionData | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [showReceiptsDialog, setShowReceiptsDialog] = useState(false);
+  const [receipts, setReceipts] = useState<InventoryMovement[]>([]);
+  const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>('week');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { branches, createBranch } = useBranches();
@@ -113,6 +119,49 @@ export function SessionsPage() {
     }
   };
 
+  const loadReceipts = async () => {
+    const now = new Date();
+    let startDate: Date;
+    const endDate = new Date(now);
+
+    switch (receiptFilter) {
+      case 'week': {
+        const dayOfWeek = now.getDay();
+        const daysToSubtract = dayOfWeek === 6 ? 7 : dayOfWeek === 0 ? 6 : dayOfWeek + 1;
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - daysToSubtract);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      }
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'custom':
+      default:
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+    }
+    endDate.setHours(23, 59, 59, 999);
+
+    const data = await inventoryMovementRepository.getIncomingByDateRange(startDate, endDate);
+    setReceipts(data.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+  };
+
+  const receiptSummary = receipts.reduce(
+    (acc, r) => {
+      const key = r.receiptType || 'Sin tipo';
+      acc[key] = (acc[key] || 0) + (r.estimatedQuantity || 1);
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const summaryText = Object.entries(receiptSummary)
+    .map(([type, count]) => `${type}: ${count}`)
+    .join(' | ');
+
   if (view === 'reports') {
     return <ReportsPage onBack={() => setView('list')} />;
   }
@@ -151,6 +200,16 @@ export function SessionsPage() {
           </Button>
           <Button variant="outline" size="icon" onClick={() => setView('reports')}>
             <FileText className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setShowReceiptsDialog(true);
+              loadReceipts();
+            }}
+          >
+            <Package className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={handleImportClick}>
             <Upload className="h-4 w-4 mr-1" />
@@ -389,6 +448,84 @@ export function SessionsPage() {
               </Button>
             )}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReceiptsDialog} onOpenChange={setShowReceiptsDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Recepciones</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant={receiptFilter === 'week' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setReceiptFilter('week');
+                  setTimeout(loadReceipts, 0);
+                }}
+              >
+                Semana
+              </Button>
+              <Button
+                variant={receiptFilter === 'month' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setReceiptFilter('month');
+                  setTimeout(loadReceipts, 0);
+                }}
+              >
+                Mes
+              </Button>
+              <Button
+                variant={receiptFilter === 'custom' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setReceiptFilter('custom');
+                  setTimeout(loadReceipts, 0);
+                }}
+              >
+                7 días
+              </Button>
+            </div>
+
+            {receipts.length > 0 && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium">{summaryText}</p>
+              </div>
+            )}
+
+            {receipts.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No hay recepciones en este período
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {receipts.map(r => (
+                  <Card key={r.id} className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{r.receiptType || r.description}</p>
+                        <p className="text-sm text-muted-foreground">{r.description}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</p>
+                      </div>
+                      <div className="text-right">
+                        {r.estimatedQuantity && (
+                          <p className="font-medium">
+                            {r.estimatedQuantity} {r.unit}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

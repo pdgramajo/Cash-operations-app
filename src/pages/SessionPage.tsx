@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTransactions, useInventoryMovements, useCashSessions } from '@/hooks';
+import { ReceiptTypeInput } from '@/components/ReceiptTypeInput';
 import { transactionRepository } from '@/lib/repos';
 import {
   formatCurrency,
@@ -732,6 +733,7 @@ function MovementDialog({
   ) => Promise<InventoryMovement>;
 }) {
   const [description, setDescription] = useState('');
+  const [receiptType, setReceiptType] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState<MovementUnit>('unit');
   const [targetBranchId, setTargetBranchId] = useState('');
@@ -748,6 +750,7 @@ function MovementDialog({
         branchId,
         type: type as InventoryMovementType,
         description: description.trim(),
+        receiptType: type === 'incoming' && receiptType.trim() ? receiptType.trim() : undefined,
         estimatedQuantity: quantity ? parseFloat(quantity) : undefined,
         unit: unit || undefined,
         targetBranchId: type === 'transfer' ? targetBranchId || undefined : undefined,
@@ -761,6 +764,7 @@ function MovementDialog({
 
   const resetForm = () => {
     setDescription('');
+    setReceiptType('');
     setQuantity('');
     setUnit('unit');
     setTargetBranchId('');
@@ -784,6 +788,13 @@ function MovementDialog({
           <DialogTitle>{getTitle()}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {type === 'incoming' && (
+            <div className="space-y-2">
+              <Label>Tipo (opcional)</Label>
+              <ReceiptTypeInput value={receiptType} onChange={setReceiptType} />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>
             <Input
