@@ -26,6 +26,7 @@ import {
 import { NewSessionDialog } from '@/components/NewSessionDialog';
 import { SessionPage } from './SessionPage';
 import { ReportsPage } from './ReportsPage';
+import { ReceiptsPage } from './ReceiptsPage';
 import { useBranches, useCashSessions, useTheme, useTransactions } from '@/hooks';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
 import {
@@ -37,7 +38,7 @@ import { importSession } from '@/lib/services/importService';
 import { inventoryMovementRepository } from '@/lib/repos';
 import type { CashSession, InventoryMovement } from '@/types';
 
-type View = 'list' | 'session' | 'reports';
+type View = 'list' | 'session' | 'reports' | 'receipts';
 
 type ReceiptFilter = 'week' | 'month' | 'custom';
 
@@ -166,6 +167,10 @@ export function SessionsPage() {
     return <ReportsPage onBack={() => setView('list')} />;
   }
 
+  if (view === 'receipts') {
+    return <ReceiptsPage onBack={() => setView('list')} />;
+  }
+
   if (view === 'session' && selectedSession) {
     return (
       <SessionPage
@@ -201,15 +206,7 @@ export function SessionsPage() {
           <FileText className="h-4 w-4" />
           Reportes
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setShowReceiptsDialog(true);
-            loadReceipts();
-          }}
-          className="gap-1"
-        >
+        <Button variant="outline" size="sm" onClick={() => setView('receipts')} className="gap-1">
           <Package className="h-4 w-4" />
           Recepciones
         </Button>
