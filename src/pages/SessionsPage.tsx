@@ -192,13 +192,13 @@ export function SessionsPage() {
 
   return (
     <div className="container mx-auto p-4 max-w-md">
-      <div className="flex flex-wrap gap-2 mb-6">
-        <Button variant="outline" size="sm" onClick={toggleTheme}>
-          {theme === 'light' ? <Moon className="h-4 w-4 mr-1" /> : <Sun className="h-4 w-4 mr-1" />}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+        <Button variant="outline" size="sm" onClick={toggleTheme} className="gap-1">
+          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           Tema
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setView('reports')}>
-          <FileText className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={() => setView('reports')} className="gap-1">
+          <FileText className="h-4 w-4" />
           Reportes
         </Button>
         <Button
@@ -208,16 +208,17 @@ export function SessionsPage() {
             setShowReceiptsDialog(true);
             loadReceipts();
           }}
+          className="gap-1"
         >
-          <Package className="h-4 w-4 mr-1" />
+          <Package className="h-4 w-4" />
           Recepciones
         </Button>
-        <Button variant="outline" size="sm" onClick={handleImportClick}>
-          <Upload className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" onClick={handleImportClick} className="gap-1">
+          <Upload className="h-4 w-4" />
           Importar
         </Button>
-        <Button onClick={() => setShowNewSession(true)}>
-          <Plus className="h-4 w-4 mr-1" />
+        <Button onClick={() => setShowNewSession(true)} className="col-span-2 sm:col-span-3 gap-1">
+          <Plus className="h-4 w-4" />
           Nueva sesión
         </Button>
       </div>
