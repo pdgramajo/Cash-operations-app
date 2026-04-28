@@ -225,7 +225,13 @@ export function SessionsPage() {
 
       {openSessions.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3 text-green-600">Abiertas</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-px flex-1 bg-green-500/40"></div>
+            <h2 className="text-xs font-semibold text-green-600 uppercase tracking-widest">
+              Abiertas
+            </h2>
+            <div className="h-px flex-1 bg-green-500/40"></div>
+          </div>
           <div className="space-y-2">
             {openSessions.map(session => (
               <Card
