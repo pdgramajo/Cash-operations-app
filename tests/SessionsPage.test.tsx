@@ -69,13 +69,13 @@ describe('SessionsPage', () => {
   });
 
   describe('initial render', () => {
-    it('should render page title', async () => {
+    it('should render action buttons', async () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
       render(<SessionsPage />);
       await waitFor(() => {
-        expect(screen.getByText('Caja')).toBeInTheDocument();
+        expect(screen.getByText('Nueva sesión')).toBeInTheDocument();
       });
     });
 
