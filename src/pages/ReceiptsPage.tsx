@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,13 +8,10 @@ import { inventoryMovementRepository, receiptTypeRepository } from '@/lib/repos'
 import { formatDate } from '@/lib/formatters';
 import type { InventoryMovement, ReceiptType } from '@/types';
 
-interface ReceiptsPageProps {
-  onBack: () => void;
-}
-
 type ReceiptTimeFilter = 'week' | 'month' | 'custom';
 
-export function ReceiptsPage({ onBack }: ReceiptsPageProps) {
+export default function ReceiptsPage() {
+  const navigate = useNavigate();
   const [receipts, setReceipts] = useState<InventoryMovement[]>([]);
   const [receiptTypes, setReceiptTypes] = useState<ReceiptType[]>([]);
   const [timeFilter, setTimeFilter] = useState<ReceiptTimeFilter>('week');
@@ -99,7 +97,7 @@ export function ReceiptsPage({ onBack }: ReceiptsPageProps) {
   return (
     <div className="container mx-auto p-4 max-w-md h-screen flex flex-col">
       <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={onBack} className="h-10 w-10">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="h-10 w-10">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

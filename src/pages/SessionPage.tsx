@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X, FileText, Lock } from 'lucide-react';
 import {
   Dialog,
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTransactions, useInventoryMovements, useCashSessions } from '@/hooks';
+import { useTransactions, useInventoryMovements, useCashSessions, useBranches } from '@/hooks';
 import { ReceiptTypeInput } from '@/components/ReceiptTypeInput';
 import { transactionRepository } from '@/lib/repos';
 import {
@@ -32,7 +33,6 @@ import {
   getMovementUnitLabel,
 } from '@/lib/formatters';
 import type {
-  Branch,
   CashSession,
   Transaction,
   InventoryMovement,
@@ -42,18 +42,18 @@ import type {
   RecipientType,
 } from '@/types';
 
-interface SessionPageProps {
-  session: CashSession;
-  onBack: () => void;
-  branches: Branch[];
-  onShowReports: () => void;
-}
-
 type TransactionDialogType = 'sale' | 'expense' | 'cash_withdrawal';
 type MovementDialogType = 'incoming' | 'outgoing' | 'transfer';
 type TransactionFilter = 'all' | 'cash' | 'transfer' | 'expense';
 
-export function SessionPage({ session, onBack, branches, onShowReports }: SessionPageProps) {
+export default function SessionPage() {
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
+  const { sessions } = useCashSessions();
+  const { branches } = useBranches();
+
+  const session = sessions.find(s => s.id === sessionId);
+
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [showMovementDialog, setShowMovementDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -62,24 +62,44 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
   const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>('all');
 
   const { transactions, createTransaction, deleteTransaction, getTotals } = useTransactions(
-    session.id
+    session?.id || ''
   );
-  const { movements, createMovement, deleteMovement } = useInventoryMovements(session.id);
+  const { movements, createMovement, deleteMovement } = useInventoryMovements(session?.id || '');
   const { closeSession, updateSession } = useCashSessions();
   const [editingOpeningBalance, setEditingOpeningBalance] = useState(false);
-  const [tempOpeningBalance, setTempOpeningBalance] = useState(session.openingBalance.toString());
-  const [currentSession, setCurrentSession] = useState(session);
+  const [tempOpeningBalance, setTempOpeningBalance] = useState(
+    session?.openingBalance.toString() || '0'
+  );
+
+  const startEditingBalance = () => {
+    if (session) {
+      setTempOpeningBalance(session.openingBalance.toString());
+      setEditingOpeningBalance(true);
+    }
+  };
+
+  if (!session) {
+    return (
+      <div className="container mx-auto p-4 max-w-md">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Sesión no encontrada</h1>
+        </div>
+      </div>
+    );
+  }
 
   const totals = getTotals();
 
   const estimatedClosingBalance =
-    currentSession.openingBalance + totals.cashSales - totals.expenses - totals.withdrawals;
+    session.openingBalance + totals.cashSales - totals.expenses - totals.withdrawals || 0;
 
   const cashSales = totals.cashSales;
   const transferSales = totals.transferSales || 0;
   const totalSales = cashSales + transferSales;
-  const dineroEnCaja =
-    currentSession.openingBalance + cashSales - totals.expenses - totals.withdrawals;
+  const dineroEnCaja = session.openingBalance + cashSales - totals.expenses - totals.withdrawals;
 
   const transactionsByFilter = transactions.filter(t => {
     if (transactionFilter === 'all') return true;
@@ -106,7 +126,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
     <div className="container mx-auto p-4 max-w-md h-screen flex flex-col">
       <div className="flex-shrink-0">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 relative">
@@ -118,9 +138,9 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
               <button
                 type="button"
                 className="text-xs text-blue-500 underline mt-1"
-                onClick={() => setEditingOpeningBalance(true)}
+                onClick={startEditingBalance}
               >
-                Saldo inicial: {formatCurrency(currentSession.openingBalance)}
+                Saldo inicial: {formatCurrency(session.openingBalance)}
               </button>
             )}
             {session.status === 'open' && editingOpeningBalance && (
@@ -137,13 +157,12 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
                   onClick={async () => {
                     const newBalance = parseFloat(tempOpeningBalance);
                     if (!isNaN(newBalance)) {
-                      await updateSession(currentSession.id, { openingBalance: newBalance });
-                      setCurrentSession(prev => ({ ...prev, openingBalance: newBalance }));
+                      await updateSession(session.id, { openingBalance: newBalance });
                     }
                     setEditingOpeningBalance(false);
                   }}
                 >
-                  ✓
+                  {'\u2713'}
                 </button>
                 <button
                   type="button"
@@ -153,13 +172,13 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
                     setEditingOpeningBalance(false);
                   }}
                 >
-                  ✕
+                  {'\u2715'}
                 </button>
               </div>
             )}
             {session.status === 'closed' && (
               <p className="text-xs text-muted-foreground mt-1">
-                Saldo inicial: {formatCurrency(currentSession.openingBalance)}
+                Saldo inicial: {formatCurrency(session.openingBalance)}
               </p>
             )}
             {session.status === 'open' && (
@@ -174,7 +193,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
               </Button>
             )}
           </div>
-          <Button variant="ghost" size="icon" onClick={onShowReports}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/reports')}>
             <FileText className="h-5 w-5" />
           </Button>
         </div>
@@ -396,7 +415,7 @@ export function SessionPage({ session, onBack, branches, onShowReports }: Sessio
         session={session}
         estimatedClosing={estimatedClosingBalance}
         closeSession={closeSession}
-        onClose={onBack}
+        onClose={() => navigate('/')}
       />
     </div>
   );
@@ -471,7 +490,7 @@ function MovementItem({
 }: {
   movement: InventoryMovement;
   onDelete?: () => void;
-  branches: Branch[];
+  branches: { id: string; name: string }[];
 }) {
   const getTargetBranchName = (branchId: string | undefined) => {
     if (!branchId) return '';
@@ -536,22 +555,20 @@ function TransactionDialog({
   const [loading, setLoading] = useState(false);
   const [quickAmounts, setQuickAmounts] = useState<number[]>([]);
 
-  const defaultQuickAmounts = [1000, 2000, 4000, 5000, 10000];
-
   useEffect(() => {
     if (type !== 'sale' || !branchId) return;
 
     let cancelled = false;
     transactionRepository.getTopSaleAmountsYesterday(branchId).then(amounts => {
       if (!cancelled) {
-        setQuickAmounts(amounts.length > 0 ? amounts : defaultQuickAmounts);
+        setQuickAmounts(amounts.length > 0 ? amounts : [1000, 2000, 4000, 5000, 10000]);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [branchId, type, defaultQuickAmounts]);
+  }, [branchId, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -727,7 +744,7 @@ function MovementDialog({
   type: MovementDialogType;
   sessionId: string;
   branchId: string | null;
-  branches: Branch[];
+  branches: { id: string; name: string }[];
   onSubmit: (
     data: Parameters<ReturnType<typeof useInventoryMovements>['createMovement']>[0]
   ) => Promise<InventoryMovement>;
