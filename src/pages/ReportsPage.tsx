@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, Download, Clipboard } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Download, Clipboard, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,12 @@ import {
   generateWeeklyReportText,
   downloadReport,
 } from '@/lib/services/reportService';
+import {
+  exportAllData,
+  downloadBackup,
+  importBackup,
+  validateBackupFile,
+} from '@/lib/services/backupService';
 
 export default function ReportsPage() {
   const navigate = useNavigate();
@@ -36,6 +42,11 @@ export default function ReportsPage() {
   const [selectedDate, setSelectedDate] = useState<string>(formatDateForInput(lastMonday));
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  const [importResult, setImportResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const getWeekStart = (dateStr: string): Date | null => {
     if (!dateStr) return null;
@@ -235,6 +246,46 @@ export default function ReportsPage() {
     }
   }, [selectedDate, branches]);
 
+  const handleExportBackup = useCallback(async () => {
+    setGenerating(true);
+    try {
+      const data = await exportAllData();
+      downloadBackup(data);
+    } finally {
+      setGenerating(false);
+    }
+  }, []);
+
+  const handleImportBackup = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setGenerating(true);
+    setImportResult(null);
+    try {
+      const data = await validateBackupFile(file);
+      if (!data) {
+        setImportResult({ success: false, message: 'Archivo de backup inválido' });
+        return;
+      }
+
+      const result = await importBackup(data);
+      if (result.success) {
+        setImportResult({
+          success: true,
+          message: `Importado: ${result.branches} sucursales, ${result.cashSessions} sesiones, ${result.transactions} transacciones, ${result.inventoryMovements} movimientos, ${result.receiptTypes} tipos, ${result.reports} reportes`,
+        });
+      } else {
+        setImportResult({ success: false, message: result.error || 'Error desconocido' });
+      }
+    } catch {
+      setImportResult({ success: false, message: 'Error al importar archivo' });
+    } finally {
+      setGenerating(false);
+      if (e.target) e.target.value = '';
+    }
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-md">
       <div className="flex items-center gap-4 mb-6">
@@ -260,6 +311,10 @@ export default function ReportsPage() {
           <TabsTrigger value="weekly" className="flex-1">
             <Calendar className="h-4 w-4 mr-2" />
             Semanal
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="flex-1">
+            <Database className="h-4 w-4 mr-2" />
+            Backup
           </TabsTrigger>
         </TabsList>
 
@@ -389,6 +444,56 @@ export default function ReportsPage() {
                   Copiar
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="backup" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Backup y Restauración</CardTitle>
+              <CardDescription>
+                Exportá todos los datos o importá un backup anterior
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="font-medium">Exportar datos</h3>
+                <p className="text-sm text-muted-foreground">
+                  Descargá un archivo JSON con todos los datos: sucursales, sesiones, transacciones,
+                  movimientos de inventario y más.
+                </p>
+                <Button onClick={handleExportBackup} disabled={generating} className="w-full">
+                  <Download className="h-4 w-4 mr-2" />
+                  {generating ? 'Exportando...' : 'Exportar Backup'}
+                </Button>
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <h3 className="font-medium">Importar datos</h3>
+                <p className="text-sm text-muted-foreground">
+                  Restaurá los datos desde un archivo de backup previamente exportado.
+                </p>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportBackup}
+                  disabled={generating}
+                  className="flex w-full text-sm"
+                />
+              </div>
+
+              {importResult && (
+                <div
+                  className={`p-3 rounded-lg text-sm ${
+                    importResult.success
+                      ? 'bg-green-50 text-green-800 border border-green-200'
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}
+                >
+                  {importResult.message}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
