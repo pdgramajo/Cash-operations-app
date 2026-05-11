@@ -44,14 +44,18 @@ export const inventoryMovementRepository = {
   },
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
-    return db.inventoryMovements.where('createdAt').between(startDate, endDate).toArray();
+    const all = await db.inventoryMovements.toArray();
+    return all.filter(m => {
+      const created = new Date(m.createdAt);
+      return created >= startDate && created <= endDate;
+    });
   },
 
   async getIncomingByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
-    const all = await db.inventoryMovements
-      .where('createdAt')
-      .between(startDate, endDate)
-      .toArray();
-    return all.filter(m => m.type === 'incoming');
+    const all = await db.inventoryMovements.toArray();
+    return all.filter(m => {
+      const created = new Date(m.createdAt);
+      return created >= startDate && created <= endDate && m.type === 'incoming';
+    });
   },
 };

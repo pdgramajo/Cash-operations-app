@@ -57,6 +57,10 @@ export const cashSessionRepository = {
   },
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<CashSession[]> {
-    return db.cashSessions.where('openedAt').between(startDate, endDate).toArray();
+    const all = await db.cashSessions.toArray();
+    return all.filter(s => {
+      const opened = new Date(s.openedAt);
+      return opened >= startDate && opened <= endDate;
+    });
   },
 };

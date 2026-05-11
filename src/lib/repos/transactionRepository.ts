@@ -49,11 +49,12 @@ export const transactionRepository = {
   },
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
-    return db.transactions
-      .where('createdAt')
-      .between(startDate, endDate)
-      .and(t => !t.isDeleted)
-      .toArray();
+    const all = await db.transactions.toArray();
+    return all.filter(t => {
+      if (t.isDeleted) return false;
+      const created = new Date(t.createdAt);
+      return created >= startDate && created <= endDate;
+    });
   },
 
   async getTopSaleAmountsYesterday(branchId: string | null, limit = 5): Promise<number[]> {
@@ -64,14 +65,20 @@ export const transactionRepository = {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const transactions = await db.transactions
-      .where('createdAt')
-      .between(yesterday, today)
-      .and(t => !t.isDeleted && t.type === 'sale' && (branchId === null || t.branchId === branchId))
-      .toArray();
+    const transactions = await db.transactions.toArray();
+    const filtered = transactions.filter(t => {
+      const created = new Date(t.createdAt);
+      return (
+        created >= yesterday &&
+        created < today &&
+        !t.isDeleted &&
+        t.type === 'sale' &&
+        (branchId === null || t.branchId === branchId)
+      );
+    });
 
     const amountCounts = new Map<number, number>();
-    for (const t of transactions) {
+    for (const t of filtered) {
       const amount = Math.round(t.amount * 100) / 100;
       amountCounts.set(amount, (amountCounts.get(amount) || 0) + 1);
     }
