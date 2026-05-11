@@ -2,8 +2,13 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SessionsPage } from '@/pages/SessionsPage';
+import { BrowserRouter } from 'react-router-dom';
+import SessionsPage from '@/pages/SessionsPage';
 import type { CashSession, Branch } from '@/types';
+
+const renderWithRouter = (ui: React.ReactElement) => {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+};
 
 const { mockBranch, createMockSession } = vi.hoisted(() => {
   const mockBranch: Branch = {
@@ -73,7 +78,7 @@ describe('SessionsPage', () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText('Nueva sesión')).toBeInTheDocument();
       });
@@ -83,7 +88,7 @@ describe('SessionsPage', () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /nueva/i })).toBeInTheDocument();
       });
@@ -97,7 +102,7 @@ describe('SessionsPage', () => {
       ]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText('Abiertas')).toBeInTheDocument();
       });
@@ -109,7 +114,7 @@ describe('SessionsPage', () => {
       ]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText('Abierta')).toBeInTheDocument();
       });
@@ -119,7 +124,7 @@ describe('SessionsPage', () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText(/no hay sesiones cerradas/i)).toBeInTheDocument();
       });
@@ -132,7 +137,7 @@ describe('SessionsPage', () => {
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
       const user = userEvent.setup();
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /nueva/i })).toBeInTheDocument();
@@ -150,7 +155,7 @@ describe('SessionsPage', () => {
       ]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText(/450/)).toBeInTheDocument();
       });
@@ -162,7 +167,7 @@ describe('SessionsPage', () => {
       ]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         expect(screen.getByText('Historial (1)')).toBeInTheDocument();
       });
@@ -174,7 +179,7 @@ describe('SessionsPage', () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
         expect(buttons.length).toBeGreaterThan(1);
@@ -187,7 +192,7 @@ describe('SessionsPage', () => {
       vi.mocked(cashSessionRepository.getAll).mockResolvedValue([]);
       vi.mocked(branchRepository.getAll).mockResolvedValue([mockBranch]);
 
-      render(<SessionsPage />);
+      renderWithRouter(<SessionsPage />);
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
         expect(buttons.length).toBeGreaterThan(0);

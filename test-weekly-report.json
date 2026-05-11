@@ -1,0 +1,175 @@
+{
+  "session": {
+    "name": "Semana Prueba",
+    "branchId": null,
+    "openedAt": "2026-05-04T09:00:00.000Z",
+    "closedAt": "2026-05-04T20:00:00.000Z",
+    "openingBalance": 0,
+    "closingBalance": 0,
+    "status": "closed",
+    "notes": "Sesión de prueba"
+  },
+  "branches": [
+    {
+      "id": "branch-001",
+      "name": "Sucursal Central",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t1",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 50000,
+      "note": "Venta lunes",
+      "createdAt": "2026-05-04T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t2",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 80000,
+      "note": "Transferencia lunes",
+      "createdAt": "2026-05-04T11:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t3",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 80000,
+      "note": "Venta martes",
+      "createdAt": "2026-05-05T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t4",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 120000,
+      "note": "Transferencia martes",
+      "createdAt": "2026-05-05T12:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t5",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 150000,
+      "note": "Venta miércoles",
+      "createdAt": "2026-05-06T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t6",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 180000,
+      "note": "Transferencia miércoles",
+      "createdAt": "2026-05-06T14:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t7",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 200000,
+      "note": "Venta jueves",
+      "createdAt": "2026-05-07T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t8",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 250000,
+      "note": "Transferencia jueves",
+      "createdAt": "2026-05-07T15:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t9",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 350000,
+      "note": "Venta viernes",
+      "createdAt": "2026-05-08T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t10",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 420000,
+      "note": "Transferencia viernes",
+      "createdAt": "2026-05-08T16:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t11",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 180000,
+      "note": "Venta sábado",
+      "createdAt": "2026-05-09T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t12",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 220000,
+      "note": "Transferencia sábado",
+      "createdAt": "2026-05-09T14:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t13",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "cash",
+      "amount": 280000,
+      "note": "Venta domingo",
+      "createdAt": "2026-05-10T10:00:00.000Z",
+      "isDeleted": false
+    },
+    {
+      "id": "t14",
+      "sessionId": "session-001",
+      "branchId": "branch-001",
+      "type": "sale",
+      "subType": "transfer",
+      "amount": 310000,
+      "note": "Transferencia domingo",
+      "createdAt": "2026-05-10T16:00:00.000Z",
+      "isDeleted": false
+    }
+  ]
+}
