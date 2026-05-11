@@ -349,3 +349,283 @@ export function generateDailyReport(
 export function downloadReport(doc: jsPDF, fileName: string): void {
   doc.save(fileName);
 }
+
+export function generateWeeklyReport(
+  sessions: CashSession[],
+  transactions: Transaction[],
+  movements: InventoryMovement[],
+  branches: Branch[],
+  startDate: Date,
+  endDate: Date
+): jsPDF {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let y = margin;
+
+  const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  const getDayName = (date: Date): string => {
+    const dayIndex = date.getDay();
+    const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+    return dayNames[adjustedIndex] || '';
+  };
+
+  const getDateKey = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const isVacuna = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    return lower.includes('vacuna') || lower.includes('novillo') || lower.includes('vaca');
+  };
+
+  const isCerdo = (text: string): boolean => {
+    return text.toLowerCase().includes('cerdo');
+  };
+
+  const getBranchName = (branchId: string | null): string => {
+    if (!branchId) return 'Sin sucursal';
+    const branch = branches.find(b => b.id === branchId);
+    return branch?.name || 'Sucursal desconocida';
+  };
+
+  const uniqueBranchIds = [
+    ...new Set(sessions.map(s => s.branchId).filter(b => b !== null)),
+  ] as string[];
+
+  const formatShortDate = (d: Date) => {
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('REPORTE SEMANAL', margin, y);
+  y += 8;
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Período: ${formatShortDate(startDate)} - ${formatShortDate(endDate)}`, margin, y);
+  y += 12;
+
+  uniqueBranchIds.forEach((branchId, branchIndex) => {
+    if (y > 250) {
+      doc.addPage();
+      y = margin;
+    }
+
+    const branchName = getBranchName(branchId);
+    const branchSessions = sessions.filter(s => s.branchId === branchId);
+    const branchSessionIds = new Set(branchSessions.map(s => s.id));
+
+    const branchTransactions = transactions.filter(t => branchSessionIds.has(t.sessionId));
+    const branchMovements = movements.filter(m => branchSessionIds.has(m.sessionId));
+
+    const daysData: { day: string; date: number; total: number }[] = [];
+    let totalWeekSales = 0;
+
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateKey = getDateKey(currentDate);
+      const dayTransactions = branchTransactions.filter(t => {
+        const tDate = new Date(t.createdAt);
+        return getDateKey(tDate) === dateKey && t.type === 'sale';
+      });
+
+      const cashSales = dayTransactions
+        .filter(t => t.subType === 'cash')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const transferSales = dayTransactions
+        .filter(t => t.subType === 'transfer')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const dayTotal = cashSales + transferSales;
+      totalWeekSales += dayTotal;
+
+      daysData.push({
+        day: getDayName(currentDate),
+        date: currentDate.getDate(),
+        total: dayTotal,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    let totalVacunas = 0;
+    let totalCerdo = 0;
+
+    branchMovements.forEach(m => {
+      if (m.type !== 'incoming') return;
+      const searchText = `${m.receiptType || ''} ${m.description || ''}`.toLowerCase();
+      if (isVacuna(searchText)) totalVacunas++;
+      if (isCerdo(searchText)) totalCerdo++;
+    });
+
+    if (branchIndex > 0) {
+      y += 8;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`SUCURSAL: ${branchName}`, margin, y);
+    y += 8;
+
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Ventas por día', margin, y);
+    y += 7;
+
+    daysData.forEach(dayData => {
+      if (y > 270) {
+        doc.addPage();
+        y = margin;
+      }
+      const label = `${dayData.day} ${dayData.date} => ${formatCurrency(dayData.total)}`;
+      doc.text(label, margin, y);
+      y += 6;
+    });
+
+    y += 2;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total semana: ${formatCurrency(totalWeekSales)}`, margin, y);
+    y += 10;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Medias res recibidas', margin, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Vacunas: ${totalVacunas}`, margin, y);
+    y += 6;
+    doc.text(`Cerdo: ${totalCerdo}`, margin, y);
+    y += 10;
+  });
+
+  return doc;
+}
+
+export function generateWeeklyReportText(
+  sessions: CashSession[],
+  transactions: Transaction[],
+  movements: InventoryMovement[],
+  branches: Branch[],
+  startDate: Date,
+  endDate: Date
+): string {
+  const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  const getDayName = (date: Date): string => {
+    const dayIndex = date.getDay();
+    const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+    return dayNames[adjustedIndex] || '';
+  };
+
+  const getDateKey = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const isVacuna = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    return lower.includes('vacuna') || lower.includes('novillo') || lower.includes('vaca');
+  };
+
+  const isCerdo = (text: string): boolean => {
+    return text.toLowerCase().includes('cerdo');
+  };
+
+  const getBranchName = (branchId: string | null): string => {
+    if (!branchId) return 'Sin sucursal';
+    const branch = branches.find(b => b.id === branchId);
+    return branch?.name || 'Sucursal desconocida';
+  };
+
+  const uniqueBranchIds = [
+    ...new Set(sessions.map(s => s.branchId).filter(b => b !== null)),
+  ] as string[];
+
+  const formatShortDate = (d: Date) => {
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  let text = `REPORTE SEMANAL\nPeríodo: ${formatShortDate(startDate)} - ${formatShortDate(endDate)}\n\n`;
+
+  uniqueBranchIds.forEach((branchId, branchIndex) => {
+    const branchName = getBranchName(branchId);
+    const branchSessions = sessions.filter(s => s.branchId === branchId);
+    const branchSessionIds = new Set(branchSessions.map(s => s.id));
+
+    const branchTransactions = transactions.filter(t => branchSessionIds.has(t.sessionId));
+    const branchMovements = movements.filter(m => branchSessionIds.has(m.sessionId));
+
+    const daysData: { day: string; date: number; total: number }[] = [];
+    let totalWeekSales = 0;
+
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateKey = getDateKey(currentDate);
+      const dayTransactions = branchTransactions.filter(t => {
+        const tDate = new Date(t.createdAt);
+        return getDateKey(tDate) === dateKey && t.type === 'sale';
+      });
+
+      const cashSales = dayTransactions
+        .filter(t => t.subType === 'cash')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const transferSales = dayTransactions
+        .filter(t => t.subType === 'transfer')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const dayTotal = cashSales + transferSales;
+      totalWeekSales += dayTotal;
+
+      daysData.push({
+        day: getDayName(currentDate),
+        date: currentDate.getDate(),
+        total: dayTotal,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    let totalVacunas = 0;
+    let totalCerdo = 0;
+
+    branchMovements.forEach(m => {
+      if (m.type !== 'incoming') return;
+      const searchText = `${m.receiptType || ''} ${m.description || ''}`.toLowerCase();
+      if (isVacuna(searchText)) totalVacunas++;
+      if (isCerdo(searchText)) totalCerdo++;
+    });
+
+    if (branchIndex > 0) {
+      text += '\n';
+    }
+
+    text += `SUCURSAL: ${branchName}\n`;
+    text += '-'.repeat(30) + '\n';
+    text += 'Ventas por día\n';
+
+    daysData.forEach(dayData => {
+      text += `${dayData.day} ${dayData.date} => ${formatCurrency(dayData.total)}\n`;
+    });
+
+    text += `\nTotal semana: ${formatCurrency(totalWeekSales)}\n`;
+    text += '-'.repeat(30) + '\n';
+    text += 'Medias res recibidas\n';
+    text += `Vacunas: ${totalVacunas}\n`;
+    text += `Cerdo: ${totalCerdo}\n`;
+  });
+
+  return text;
+}

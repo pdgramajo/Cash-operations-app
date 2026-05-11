@@ -55,4 +55,8 @@ export const cashSessionRepository = {
   async delete(id: string): Promise<void> {
     await db.cashSessions.delete(id);
   },
+
+  async getByDateRange(startDate: Date, endDate: Date): Promise<CashSession[]> {
+    return db.cashSessions.where('openedAt').between(startDate, endDate).toArray();
+  },
 };

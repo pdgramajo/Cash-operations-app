@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { ArrowLeft, FileText, Calendar, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, FileText, Calendar, Download, Clipboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,17 +10,50 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
   generateSessionReport,
   generateDailyReport,
+  generateWeeklyReport,
+  generateWeeklyReportText,
   downloadReport,
 } from '@/lib/services/reportService';
 
-interface ReportsPageProps {
-  onBack: () => void;
-}
+export default function ReportsPage() {
+  const navigate = useNavigate();
+  const getLastMonday = (): Date => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
 
-export function ReportsPage({ onBack }: ReportsPageProps) {
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const formatDateForInput = (date: Date): string => {
+    const iso = date.toISOString();
+    return iso.split('T')[0] || '';
+  };
+
+  const lastMonday = getLastMonday();
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateForInput(lastMonday));
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  const getWeekStart = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr + 'T00:00:00');
+    const day = date.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
+
+  const getWeekEnd = (startDate: Date): Date => {
+    const end = new Date(startDate);
+    end.setDate(startDate.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  };
 
   const { branches } = useBranches();
   const { sessions } = useCashSessions();
@@ -111,10 +145,100 @@ export function ReportsPage({ onBack }: ReportsPageProps) {
     }
   }, [selectedDate, selectedBranchId, closedSessions, branches]);
 
+  const handleWeeklyReport = useCallback(async () => {
+    if (!selectedDate) return;
+
+    setGenerating(true);
+    try {
+      const { transactionRepository, inventoryMovementRepository, cashSessionRepository } =
+        await import('@/lib/repos');
+
+      const startOfWeek = getWeekStart(selectedDate);
+      const endOfWeek = getWeekEnd(startOfWeek!);
+
+      const allSessionsInRange = await cashSessionRepository.getByDateRange(
+        startOfWeek!,
+        endOfWeek
+      );
+
+      const weekSessions = allSessionsInRange.filter(s => s.status === 'closed');
+
+      if (weekSessions.length === 0) {
+        alert('No hay sesiones cerradas para la semana seleccionada');
+        return;
+      }
+
+      const allTransactions = await transactionRepository.getByDateRange(startOfWeek!, endOfWeek);
+      const allMovements = await inventoryMovementRepository.getByDateRange(
+        startOfWeek!,
+        endOfWeek
+      );
+
+      const doc = generateWeeklyReport(
+        weekSessions,
+        allTransactions,
+        allMovements,
+        branches,
+        startOfWeek!,
+        endOfWeek
+      );
+
+      const dateStr = selectedDate.replace(/-/g, '');
+      downloadReport(doc, `reporte-semanal-${dateStr}.pdf`);
+    } finally {
+      setGenerating(false);
+    }
+  }, [selectedDate, branches]);
+
+  const handleCopyWeeklyReport = useCallback(async () => {
+    if (!selectedDate) return;
+
+    setGenerating(true);
+    try {
+      const { transactionRepository, inventoryMovementRepository, cashSessionRepository } =
+        await import('@/lib/repos');
+
+      const startOfWeek = getWeekStart(selectedDate);
+      const endOfWeek = getWeekEnd(startOfWeek!);
+
+      const allSessionsInRange = await cashSessionRepository.getByDateRange(
+        startOfWeek!,
+        endOfWeek
+      );
+
+      const weekSessions = allSessionsInRange.filter(s => s.status === 'closed');
+
+      if (weekSessions.length === 0) {
+        alert('No hay sesiones cerradas para la semana seleccionada');
+        return;
+      }
+
+      const allTransactions = await transactionRepository.getByDateRange(startOfWeek!, endOfWeek);
+      const allMovements = await inventoryMovementRepository.getByDateRange(
+        startOfWeek!,
+        endOfWeek
+      );
+
+      const reportText = generateWeeklyReportText(
+        weekSessions,
+        allTransactions,
+        allMovements,
+        branches,
+        startOfWeek!,
+        endOfWeek
+      );
+
+      await navigator.clipboard.writeText(reportText);
+      alert('Reporte copiado al portapapeles');
+    } finally {
+      setGenerating(false);
+    }
+  }, [selectedDate, branches]);
+
   return (
     <div className="container mx-auto p-4 max-w-md">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
@@ -132,6 +256,10 @@ export function ReportsPage({ onBack }: ReportsPageProps) {
           <TabsTrigger value="daily" className="flex-1">
             <Calendar className="h-4 w-4 mr-2" />
             Diario
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="flex-1">
+            <Calendar className="h-4 w-4 mr-2" />
+            Semanal
           </TabsTrigger>
         </TabsList>
 
@@ -219,6 +347,48 @@ export function ReportsPage({ onBack }: ReportsPageProps) {
                 <Download className="h-4 w-4 mr-2" />
                 {generating ? 'Generando...' : 'Descargar Reporte'}
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="weekly" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reporte Semanal</CardTitle>
+              <CardDescription>
+                Ventas por día (lunes-domingo) y recepciones de medias res por sucursal
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Semana (lunes)</label>
+                <input
+                  type="date"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={selectedDate}
+                  onChange={e => setSelectedDate(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  onClick={handleWeeklyReport}
+                  disabled={!selectedDate || generating}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCopyWeeklyReport}
+                  disabled={!selectedDate || generating}
+                >
+                  <Clipboard className="h-4 w-4 mr-2" />
+                  Copiar
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
