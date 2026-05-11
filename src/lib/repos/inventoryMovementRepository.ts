@@ -13,13 +13,26 @@ export interface CreateInventoryMovementData {
   targetBranchId?: string;
 }
 
+function parseMovementDate(m: InventoryMovement): InventoryMovement {
+  return {
+    ...m,
+    createdAt: typeof m.createdAt === 'string' ? new Date(m.createdAt) : m.createdAt,
+  };
+}
+
+function parseMovements(movements: InventoryMovement[]): InventoryMovement[] {
+  return movements.map(parseMovementDate);
+}
+
 export const inventoryMovementRepository = {
   async getBySession(sessionId: string): Promise<InventoryMovement[]> {
-    return db.inventoryMovements.where('sessionId').equals(sessionId).toArray();
+    const movements = await db.inventoryMovements.where('sessionId').equals(sessionId).toArray();
+    return parseMovements(movements);
   },
 
   async getById(id: string): Promise<InventoryMovement | undefined> {
-    return db.inventoryMovements.get(id);
+    const m = await db.inventoryMovements.get(id);
+    return m ? parseMovementDate(m) : undefined;
   },
 
   async create(data: CreateInventoryMovementData): Promise<InventoryMovement> {
@@ -45,16 +58,18 @@ export const inventoryMovementRepository = {
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
     const all = await db.inventoryMovements.toArray();
-    return all.filter(m => {
-      const created = new Date(m.createdAt);
+    const parsed = parseMovements(all);
+    return parsed.filter(m => {
+      const created = m.createdAt;
       return created >= startDate && created <= endDate;
     });
   },
 
   async getIncomingByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]> {
     const all = await db.inventoryMovements.toArray();
-    return all.filter(m => {
-      const created = new Date(m.createdAt);
+    const parsed = parseMovements(all);
+    return parsed.filter(m => {
+      const created = m.createdAt;
       return created >= startDate && created <= endDate && m.type === 'incoming';
     });
   },

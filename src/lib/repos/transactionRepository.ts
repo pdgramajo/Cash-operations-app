@@ -2,6 +2,17 @@ import { db } from '../db';
 import type { Transaction, TransactionType, TransactionSubType, RecipientType } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+function parseTransactionDate(t: Transaction): Transaction {
+  return {
+    ...t,
+    createdAt: typeof t.createdAt === 'string' ? new Date(t.createdAt) : t.createdAt,
+  };
+}
+
+function parseTransactions(transactions: Transaction[]): Transaction[] {
+  return transactions.map(parseTransactionDate);
+}
+
 export interface CreateTransactionData {
   sessionId: string;
   branchId: string | null;
@@ -15,15 +26,17 @@ export interface CreateTransactionData {
 
 export const transactionRepository = {
   async getBySession(sessionId: string): Promise<Transaction[]> {
-    return db.transactions
+    const transactions = await db.transactions
       .where('sessionId')
       .equals(sessionId)
       .and(t => !t.isDeleted)
       .toArray();
+    return parseTransactions(transactions);
   },
 
   async getById(id: string): Promise<Transaction | undefined> {
-    return db.transactions.get(id);
+    const t = await db.transactions.get(id);
+    return t ? parseTransactionDate(t) : undefined;
   },
 
   async create(data: CreateTransactionData): Promise<Transaction> {
@@ -50,9 +63,10 @@ export const transactionRepository = {
 
   async getByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
     const all = await db.transactions.toArray();
-    return all.filter(t => {
+    const parsed = parseTransactions(all);
+    return parsed.filter(t => {
       if (t.isDeleted) return false;
-      const created = new Date(t.createdAt);
+      const created = t.createdAt;
       return created >= startDate && created <= endDate;
     });
   },
