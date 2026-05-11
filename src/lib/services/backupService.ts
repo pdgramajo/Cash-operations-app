@@ -30,6 +30,49 @@ export interface ImportResult {
   error?: string;
 }
 
+function parseDate(value: unknown): Date {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+  return new Date();
+}
+
+function parseBranch(data: Branch[]): Branch[] {
+  return data.map(b => ({ ...b, createdAt: parseDate(b.createdAt) }));
+}
+
+function parseCashSession(data: CashSession[]): CashSession[] {
+  return data.map(s => ({
+    ...s,
+    openedAt: parseDate(s.openedAt),
+    closedAt: s.closedAt ? parseDate(s.closedAt) : null,
+  }));
+}
+
+function parseTransaction(data: Transaction[]): Transaction[] {
+  return data.map(t => ({ ...t, createdAt: parseDate(t.createdAt) }));
+}
+
+function parseInventoryMovement(data: InventoryMovement[]): InventoryMovement[] {
+  return data.map(m => ({ ...m, createdAt: parseDate(m.createdAt) }));
+}
+
+function parseReport(data: Report[]): Report[] {
+  return data.map(r => ({
+    ...r,
+    createdAt: parseDate(r.createdAt),
+    dateFrom: r.dateFrom ? parseDate(r.dateFrom) : null,
+    dateTo: r.dateTo ? parseDate(r.dateTo) : null,
+  }));
+}
+
+function parseReceiptType(data: ReceiptType[]): ReceiptType[] {
+  return data.map(r => ({ ...r, createdAt: parseDate(r.createdAt) }));
+}
+
 export async function exportAllData(): Promise<BackupData> {
   const [branches, cashSessions, transactions, inventoryMovements, receiptTypes, reports] =
     await Promise.all([
@@ -90,32 +133,32 @@ export async function importBackup(data: BackupData): Promise<ImportResult> {
     let reports = 0;
 
     if (data.branches && data.branches.length > 0) {
-      await db.branches.bulkPut(data.branches);
+      await db.branches.bulkPut(parseBranch(data.branches));
       branches = data.branches.length;
     }
 
     if (data.cashSessions && data.cashSessions.length > 0) {
-      await db.cashSessions.bulkPut(data.cashSessions);
+      await db.cashSessions.bulkPut(parseCashSession(data.cashSessions));
       cashSessions = data.cashSessions.length;
     }
 
     if (data.transactions && data.transactions.length > 0) {
-      await db.transactions.bulkPut(data.transactions);
+      await db.transactions.bulkPut(parseTransaction(data.transactions));
       transactions = data.transactions.length;
     }
 
     if (data.inventoryMovements && data.inventoryMovements.length > 0) {
-      await db.inventoryMovements.bulkPut(data.inventoryMovements);
+      await db.inventoryMovements.bulkPut(parseInventoryMovement(data.inventoryMovements));
       inventoryMovements = data.inventoryMovements.length;
     }
 
     if (data.receiptTypes && data.receiptTypes.length > 0) {
-      await db.receiptTypes.bulkPut(data.receiptTypes);
+      await db.receiptTypes.bulkPut(parseReceiptType(data.receiptTypes));
       receiptTypes = data.receiptTypes.length;
     }
 
     if (data.reports && data.reports.length > 0) {
-      await db.reports.bulkPut(data.reports);
+      await db.reports.bulkPut(parseReport(data.reports));
       reports = data.reports.length;
     }
 
