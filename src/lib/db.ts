@@ -17,7 +17,7 @@ export class CashOperationsDB extends Dexie {
   receiptTypes!: EntityTable<ReceiptType, 'id'>;
 
   constructor() {
-    super('cashOperationsDB');
+    super('cashOperationsDB_v2');
 
     this.version(1).stores({
       branches: 'id, name, createdAt',
