@@ -85,7 +85,7 @@ export default function SessionPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Sesión no encontrada</h1>
+          <h1 className="text-2xl font-semibold">Sesión no encontrada</h1>
         </div>
       </div>
     );
@@ -130,7 +130,7 @@ export default function SessionPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 relative">
-            <h1 className="text-2xl font-bold pr-16">{session.name}</h1>
+            <h1 className="text-2xl font-semibold pr-16">{session.name}</h1>
             <p className="text-sm text-muted-foreground">
               {getBranchName(session.branchId)} • {formatDateTime(session.openedAt)}
             </p>

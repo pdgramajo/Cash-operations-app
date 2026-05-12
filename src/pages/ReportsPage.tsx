@@ -293,7 +293,7 @@ export default function ReportsPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">Reportes</h1>
+          <h1 className="text-2xl font-semibold">Reportes</h1>
           <p className="text-sm text-muted-foreground">Generá reportes en PDF</p>
         </div>
       </div>

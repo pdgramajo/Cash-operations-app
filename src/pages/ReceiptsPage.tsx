@@ -97,11 +97,11 @@ export default function ReceiptsPage() {
   return (
     <div className="container mx-auto p-4 max-w-md h-screen flex flex-col">
       <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="h-10 w-10">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="size-10">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold">Recepciones</h1>
+          <h1 className="text-xl font-semibold">Recepciones</h1>
           <p className="text-xs text-muted-foreground">{getFilterLabel()}</p>
         </div>
       </div>
