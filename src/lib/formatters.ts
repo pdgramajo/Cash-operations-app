@@ -19,11 +19,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-AR', {
   minute: '2-digit',
 });
 
-const timeFormatter = new Intl.DateTimeFormat('es-AR', {
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
 export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount);
 }
@@ -38,12 +33,6 @@ export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   return dateTimeFormatter.format(d);
-}
-
-export function formatTime(date: Date | string | null | undefined): string {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return timeFormatter.format(d);
 }
 
 export function getTransactionTypeLabel(type: string): string {
