@@ -12,6 +12,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       base: '/Cash-operations-app/',
+      devOptions: {
+        enabled: true,
+      },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Cash Operations System',
