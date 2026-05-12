@@ -9,9 +9,15 @@ interface SessionHeaderProps {
   session: CashSession;
   branches: { id: string; name: string }[];
   updateSession: (id: string, data: Partial<CashSession>) => Promise<void>;
+  onCloseClick?: () => void;
 }
 
-export function SessionHeader({ session, branches, updateSession }: SessionHeaderProps) {
+export function SessionHeader({
+  session,
+  branches,
+  updateSession,
+  onCloseClick,
+}: SessionHeaderProps) {
   const navigate = useNavigate();
   const [editingOpeningBalance, setEditingOpeningBalance] = useState(false);
   const [tempOpeningBalance, setTempOpeningBalance] = useState(session.openingBalance.toString());
@@ -89,7 +95,7 @@ export function SessionHeader({ session, branches, updateSession }: SessionHeade
             variant="outline"
             size="sm"
             className="absolute right-0 top-0 h-7 text-sm"
-            onClick={() => {}}
+            onClick={onCloseClick}
           >
             <Lock className="h-3 w-3 mr-1" />
             Cerrar

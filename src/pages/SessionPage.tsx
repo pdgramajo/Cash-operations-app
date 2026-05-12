@@ -82,7 +82,12 @@ export default function SessionPage() {
   return (
     <div className="container mx-auto p-4 max-w-md h-screen flex flex-col">
       <div className="flex-shrink-0">
-        <SessionHeader session={session} branches={branches} updateSession={updateSession} />
+        <SessionHeader
+          session={session}
+          branches={branches}
+          updateSession={updateSession}
+          onCloseClick={() => setShowCloseDialog(true)}
+        />
 
         <SessionStats
           cashSales={cashSales}
