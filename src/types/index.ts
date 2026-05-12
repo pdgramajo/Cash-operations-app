@@ -26,6 +26,12 @@ export type InventoryMovementType =
 
 export type MovementUnit = 'kg' | 'unit' | 'half' | 'quarter';
 
+export type TransactionDialogType = 'sale' | 'expense' | 'cash_withdrawal';
+
+export type MovementDialogType = 'incoming' | 'outgoing' | 'transfer';
+
+export type TransactionFilter = 'all' | 'cash' | 'transfer' | 'expense';
+
 export type SessionStatus = 'open' | 'closed';
 
 export type ReportType = 'session' | 'daily' | 'custom' | 'range';
