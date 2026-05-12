@@ -39,7 +39,7 @@ export default function ReportsPage() {
   };
 
   const lastMonday = getLastMonday();
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForInput(lastMonday));
+  const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(lastMonday));
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -369,8 +369,11 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha</label>
+                <label htmlFor="report-date" className="text-sm font-medium">
+                  Fecha
+                </label>
                 <input
+                  id="report-date"
                   type="date"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={selectedDate}
@@ -379,8 +382,11 @@ export default function ReportsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Sucursal (opcional)</label>
+                <label htmlFor="report-branch" className="text-sm font-medium">
+                  Sucursal (opcional)
+                </label>
                 <select
+                  id="report-branch"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={selectedBranchId || ''}
                   onChange={e => setSelectedBranchId(e.target.value || null)}
@@ -416,8 +422,11 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Semana (lunes)</label>
+                <label htmlFor="report-week" className="text-sm font-medium">
+                  Semana (lunes)
+                </label>
                 <input
+                  id="report-week"
                   type="date"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={selectedDate}

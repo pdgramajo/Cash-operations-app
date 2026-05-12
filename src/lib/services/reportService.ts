@@ -391,7 +391,7 @@ export function generateWeeklyReport(
   };
 
   const uniqueBranchIds = [
-    ...new Set(sessions.map(s => s.branchId).filter(b => b !== null)),
+    ...new Set(sessions.filter(s => s.branchId).map(s => s.branchId)),
   ] as string[];
 
   const formatShortDate = (d: Date) => {
@@ -550,7 +550,7 @@ export function generateWeeklyReportText(
   };
 
   const uniqueBranchIds = [
-    ...new Set(sessions.map(s => s.branchId).filter(b => b !== null)),
+    ...new Set(sessions.filter(s => s.branchId).map(s => s.branchId)),
   ] as string[];
 
   const formatShortDate = (d: Date) => {
